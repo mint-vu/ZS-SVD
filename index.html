@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero Sum SVD — Balancing Loss Sensitivity for Low-Rank LLM Compression</title>
+<meta name="description" content="ZS-SVD: a post-training, SVD-based LLM compression method that performs global singular-component selection with a zero-sum rule. Accepted at ICML 2026.">
+<meta property="og:title" content="Zero Sum SVD: Balancing Loss Sensitivity for Low-Rank LLM Compression">
+<meta property="og:description" content="A post-training SVD compression method with global, signed first-order loss sensitivity selection. Accepted at ICML 2026.">
+<meta property="og:image" content="figures/ZeroSumSVD.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="katex/katex.min.css">
+<script defer src="katex/katex.min.js"></script>
+<script defer src="katex/auto-render.min.js"></script>
+<script defer>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (typeof renderMathInElement === "function") {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$",  right: "$",  display: false }
+        ],
+        throwOnError: false
+      });
+    }
+  });
+</script>
+
+<style>
+  :root {
+    --bg:        #ffffff;
+    --bg-soft:   #f7f4ec;          /* warm cream for table headers, accent surfaces */
+    --surface:   #ffffff;          /* same as bg — cards rely on borders for definition */
+    --ink:       #1c1812;
+    --ink-soft:  #423c33;
+    --muted:     #6e6557;
+    --rule:      #e6dec9;
+    --rule-soft: #f1ecdc;
+    --accent:    #a64a2a;          /* warm sienna, drawn from the figure */
+    --accent-deep:#7e3415;
+    --accent-soft:#f6e1d1;
+    --indigo:    #1f3a5f;          /* secondary, drawn from the heap figure */
+    --indigo-soft:#dde4ee;
+
+    --font-display: 'Newsreader', ui-serif, Georgia, serif;
+    --font-body:    'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+    --maxw: 880px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+  }
+
+  main, header, footer { position: relative; z-index: 1; }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* ── header / hero ───────────────────────────────────────────── */
+  .hero {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 88px 32px 56px;
+  }
+
+  .venue {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    padding: 7px 14px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--accent-soft);
+    margin-bottom: 28px;
+  }
+  .venue::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(166,74,42,0.18);
+  }
+
+  h1.title {
+    font-family: var(--font-display);
+    font-weight: 380;
+    font-size: clamp(2.2rem, 5.4vw, 3.6rem);
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+    margin: 0 0 8px;
+    color: var(--ink);
+    font-variation-settings: "opsz" 72;
+  }
+  h1.title .zero {
+    font-style: italic;
+    font-weight: 360;
+    color: var(--accent);
+    font-variation-settings: "opsz" 72;
+  }
+  h1.title .em {
+    font-style: italic;
+    font-weight: 380;
+    color: var(--ink-soft);
+    font-variation-settings: "opsz" 72;
+  }
+
+  .subtitle {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.18rem;
+    color: var(--muted);
+    margin: 6px 0 36px;
+    letter-spacing: -0.005em;
+  }
+
+  /* authors */
+  .authors {
+    font-size: 1.02rem;
+    line-height: 1.75;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .authors a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    transition: border-color 0.18s, color 0.18s;
+  }
+  .authors a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .authors sup {
+    font-family: var(--font-mono);
+    font-size: 0.7em;
+    color: var(--accent);
+    margin-left: 1px;
+    font-weight: 500;
+  }
+  .authors .corr { color: var(--muted); }
+
+  .affiliations {
+    font-size: 0.92rem;
+    color: var(--muted);
+    margin-top: 14px;
+    line-height: 1.7;
+  }
+  .affiliations sup {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    margin-right: 4px;
+    font-weight: 500;
+  }
+
+  /* action buttons */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 38px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    text-decoration: none;
+    color: var(--bg);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    transition: transform 0.12s ease, background 0.18s, color 0.18s, border-color 0.18s;
+  }
+  .btn:hover { transform: translateY(-1px); background: var(--accent); border-color: var(--accent); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .btn.secondary:hover { background: var(--ink); color: var(--bg); transform: translateY(-1px); }
+  .btn.disabled {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--rule);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .btn .soon {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--rule-soft);
+    color: var(--muted);
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+
+  /* ── section frame ───────────────────────────────────────────── */
+  section {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 56px 32px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 380;
+    font-size: clamp(1.7rem, 3vw, 2.15rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 28px;
+    color: var(--ink);
+    font-variation-settings: "opsz" 48;
+  }
+  h2 em { font-style: italic; color: var(--accent); font-variation-settings: "opsz" 48; }
+
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.2rem;
+    margin: 32px 0 12px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    font-variation-settings: "opsz" 24;
+  }
+
+  p { margin: 0 0 1.05em; }
+  p strong { font-weight: 600; color: var(--ink); }
+  a.inline { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent-soft); }
+  a.inline:hover { border-bottom-style: solid; }
+
+  /* abstract block */
+  .abstract {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 32px 36px;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(28,24,18,0.025), 0 12px 32px -16px rgba(28,24,18,0.08);
+  }
+  .abstract p { font-size: 1.02rem; color: var(--ink-soft); margin-bottom: 0; }
+  .abstract p:first-of-type::first-letter {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 3.4em;
+    line-height: 0.85;
+    float: left;
+    color: var(--accent);
+    margin: 0.06em 0.08em -0.05em 0;
+    font-variation-settings: "opsz" 72;
+  }
+
+  /* tldr / contributions */
+  .tldr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 20px;
+  }
+  .tldr-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 24px;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .tldr-card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px -20px rgba(28,24,18,0.18); }
+  .tldr-card .num {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 350;
+    font-style: italic;
+    color: var(--accent);
+    line-height: 1;
+    display: block;
+    margin-bottom: 8px;
+    font-variation-settings: "opsz" 48;
+  }
+  .tldr-card h4 {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .tldr-card p { font-size: 0.94rem; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  /* figures */
+  figure {
+    margin: 28px 0 8px;
+    padding: 0;
+  }
+  figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  figcaption {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-top: 14px;
+    line-height: 1.55;
+    padding-left: 14px;
+    border-left: 2px solid var(--rule);
+  }
+  figcaption .figlabel {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: 8px;
+  }
+
+  /* equation block */
+  .eq-block {
+    margin: 22px 0;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  .eq-block .eq-caption {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    margin-bottom: 8px;
+  }
+
+  /* results table */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 18px -4px 8px;
+    padding: 4px;
+  }
+  table.results {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  table.results th, table.results td {
+    padding: 10px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--rule-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  table.results th {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--rule);
+  }
+  table.results td.method, table.results th.method {
+    text-align: left;
+    font-family: var(--font-body);
+  }
+  table.results td.method { font-weight: 500; color: var(--ink); }
+  table.results tr:last-child td { border-bottom: none; }
+  table.results tr.ours {
+    background: linear-gradient(to right, var(--accent-soft) 0%, transparent 100%);
+  }
+  table.results tr.ours td.method { color: var(--accent-deep); font-weight: 700; }
+  table.results tr.ours td { color: var(--ink); font-weight: 600; }
+  .table-note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.55;
+  }
+
+  /* dual-column tables (LLaMA / Vicuna split) */
+  table.results th.split { border-left: 1px solid var(--rule); }
+  table.results td.split { border-left: 1px solid var(--rule-soft); }
+  table.results th.group {
+    text-align: center;
+    border-bottom: 1px solid var(--rule);
+    color: var(--accent-deep);
+    background: var(--bg-soft);
+    font-weight: 600;
+  }
+
+  /* bibtex */
+  .bibtex-wrap {
+    background: #1c1812;
+    border-radius: 6px;
+    padding: 22px 26px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bibtex-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 10% 0%, rgba(166,74,42,0.16), transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(31,58,95,0.15), transparent 50%);
+    pointer-events: none;
+  }
+  .bibtex-wrap pre {
+    position: relative;
+    margin: 0;
+    color: #e8e0cf;
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .bibtex-wrap .key { color: #f4a980; }
+  .bibtex-wrap .val { color: #c9d6e8; }
+  .copy-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(255,253,248,0.08);
+    color: #e8e0cf;
+    border: 1px solid rgba(255,253,248,0.16);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s;
+    z-index: 2;
+  }
+  .copy-btn:hover { background: rgba(255,253,248,0.18); }
+
+  /* divider */
+  .divider {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .divider hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 0;
+  }
+
+  /* footer */
+  footer {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 56px 32px 88px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  footer .corr-block { font-style: italic; }
+  footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  footer a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  footer .credit {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ── ΔL balance callout (Selection section) ─────────────────── */
+  .dl-balance {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px 22px 18px;
+    margin: 18px 0 26px;
+  }
+  .dl-balance-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .dl-balance-eyebrow .meta-right {
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+  }
+  .dl-balance-track {
+    height: 9px;
+    display: flex;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--rule-soft);
+    margin-bottom: 12px;
+  }
+  .dl-balance-track .seg { display: block; height: 100%; }
+  .dl-balance-track .seg.neg { background: var(--indigo); }
+  .dl-balance-track .seg.pos { background: var(--accent); }
+  .dl-balance-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+  .dl-balance-row .tag.neg strong { color: var(--indigo); font-weight: 700; font-family: var(--font-mono); }
+  .dl-balance-row .tag.pos strong { color: var(--accent); font-weight: 700; font-family: var(--font-mono); }
+  .dl-balance-caption {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin: 14px 0 0;
+    line-height: 1.55;
+  }
+  @media (max-width: 640px) {
+    .dl-balance-row { flex-direction: column; gap: 6px; font-size: 0.8rem; }
+  }
+
+  /* ── convergence chart (Correction section) ─────────────────── */
+  .convergence {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 26px 20px;
+  }
+  .convergence-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .convergence-eyebrow .meta-right {
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+  }
+  .convergence svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .convergence-legend {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+  .convergence-legend .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+  .convergence-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .convergence-legend .dot.t { background: var(--accent); border: 1.5px solid #ffffff; box-shadow: 0 0 0 1px var(--accent); }
+  .convergence-legend .dot.c { background: #ffffff; border: 1.5px solid var(--accent); }
+  .convergence-legend .legend-tag {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.88rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted);
+  }
+  @media (max-width: 640px) {
+    .convergence { padding: 18px 14px 14px; }
+    .convergence-legend { gap: 10px; font-size: 0.62rem; }
+    .convergence-legend .legend-tag { margin-left: 0; font-size: 0.78rem; }
+  }
+
+  /* ── ratio heatmap (replaces rank_ratio figure) ─────────────── */
+
+  /* responsive */
+  @media (max-width: 640px) {
+    .hero { padding: 56px 22px 40px; }
+    section { padding: 44px 22px; }
+    footer { padding: 40px 22px 64px; }
+    .tldr { grid-template-columns: 1fr; }
+    .abstract { padding: 24px 22px; }
+    .actions { gap: 8px; }
+    .btn { padding: 10px 14px; font-size: 0.86rem; }
+  }
+
+  /* ── ratio heatmap (replaces rank_ratio figure) ─────────────── */
+  .heatmap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 26px 20px;
+  }
+  .heatmap-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .heatmap-eyebrow .meta-right {
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+  }
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: 64px repeat(7, 1fr);
+    gap: 3px;
+  }
+  .heatmap-grid .col-h,
+  .heatmap-grid .row-h {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .heatmap-grid .col-h {
+    text-align: center;
+    padding: 4px 0 10px;
+  }
+  .heatmap-grid .row-h {
+    color: var(--accent);
+    text-align: right;
+    padding: 0 12px 0 0;
+    align-self: center;
+  }
+  .heatmap-grid .cell {
+    background: rgba(166, 74, 42, var(--a));
+    padding: 13px 2px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    border-radius: 2px;
+    transition: transform 0.15s ease;
+    cursor: default;
+  }
+  .heatmap-grid .cell:hover { transform: scale(1.06); }
+  .heatmap-grid .cell.bright { color: #ffffff; }
+
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .heatmap-legend .scale {
+    flex: 1;
+    max-width: 220px;
+    height: 6px;
+    background: linear-gradient(to right, rgba(166, 74, 42, 0.025), rgba(166, 74, 42, 1));
+    border-radius: 2px;
+  }
+  .heatmap-legend .legend-tag {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted);
+  }
+
+  @media (max-width: 640px) {
+    .heatmap { padding: 18px 16px 16px; }
+    .heatmap-grid { grid-template-columns: 48px repeat(7, 1fr); gap: 2px; }
+    .heatmap-grid .cell { padding: 10px 1px; font-size: 0.72rem; }
+    .heatmap-grid .col-h, .heatmap-grid .row-h { font-size: 0.6rem; letter-spacing: 0.08em; }
+    .heatmap-grid .row-h { padding-right: 8px; }
+  }
+
+  /* katex sizing */
+  .katex { font-size: 1.04em !important; }
+  .katex-display { margin: 0 !important; overflow-x: auto; overflow-y: hidden; }
+</style>
+</head>
+
+<body>
+
+<main>
+
+  <!-- ─────────────────────────────── HERO ─────────────────────────────── -->
+  <header class="hero">
+    <div class="venue">ICML 2026 · Accepted</div>
+
+    <h1 class="title">
+      <span class="zero">Zero&nbsp;Sum</span> SVD<span style="color: var(--rule);">&nbsp;·&nbsp;</span><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression
+    </h1>
+
+    <div class="subtitle">A global, signed first-order rule for picking <em>which</em> singular components to drop.</div>
+
+    <div class="authors">
+      Ali Abbasi<sup>1</sup>,&nbsp;
+      Chayne Thrash<sup>1</sup>,&nbsp;
+      Haoran Qin<sup>1</sup>,&nbsp;
+      Shansita Sharma<sup>1</sup>,&nbsp;
+      Sepehr Seifi<sup>1</sup>,&nbsp;
+      Soheil Kolouri<sup>1,2,3</sup>
+    </div>
+
+    <div class="affiliations">
+      <span><sup>1</sup>Department of Computer Science, College of Connected Computing, Vanderbilt University</span><br>
+      <span><sup>2</sup>Department of Electrical and Computer Engineering, Vanderbilt University</span><br>
+      <span><sup>3</sup>Nanofold.ai</span>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="https://arxiv.org/pdf/2602.02848" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        Paper
+      </a>
+      <a class="btn secondary" href="https://github.com/mint-vu/Zero-Sum-SVD" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.27-.01-1.16-.02-2.11-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.68-1.27-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11.04 11.04 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.26 5.68.41.36.78 1.06.78 2.13 0 1.54-.01 2.78-.01 3.16 0 .31.21.67.8.56 4.57-1.52 7.85-5.83 7.85-10.91C23.5 5.65 18.35.5 12 .5Z"/></svg>
+        Code
+      </a>
+      <a class="btn secondary" href="#bibtex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </header>
+
+  <div class="divider"><hr></div>
+
+  <!-- ─────────────────────────────── ABSTRACT ─────────────────────────────── -->
+  <section id="abstract">
+    <div class="section-label">Abstract</div>
+    <div class="abstract">
+      <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+      <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────── TLDR ─────────────────────────────── -->
+  <section id="contributions">
+    <div class="section-label">Contributions</div>
+    <h2>Three ideas, one budget.</h2>
+    <p style="color: var(--muted); max-width: 56ch;">ZS-SVD does not pre-allocate ranks per layer. It treats every singular component in the model as a candidate and decides what to drop with a single, principled rule.</p>
+
+    <div class="tldr">
+      <div class="tldr-card">
+        <span class="num">01</span>
+        <h4>First-order singular sensitivity</h4>
+        <p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates: $\Delta\mathcal{L}_i \approx -\sigma_i\, u_i^\top H v_i$, with $H = \nabla_W\mathcal{L} \cdot S^{-\top}$.</p>
+      </div>
+      <div class="tldr-card">
+        <span class="num">02</span>
+        <h4>Zero-sum global selection</h4>
+        <p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero — automatically inducing heterogeneous ranks under a global budget.</p>
+      </div>
+      <div class="tldr-card">
+        <span class="num">03</span>
+        <h4>Light truncate–correct–re-truncate</h4>
+        <p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error because gradients near pretrained solutions are themselves low-rank.</p>
+      </div>
+      <div class="tldr-card">
+        <span class="num">04</span>
+        <h4>Hardware-agnostic, fast</h4>
+        <p>No specialized kernels, no expensive per-layer rank optimization, real wall-clock speedups. Improves perplexity and zero-shot accuracy across LLaMA, Vicuna, OPT, and 7B–30B scales.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────── METHOD: SCORING ─────────────────────────────── -->
+  <section id="method-scoring">
+    <div class="section-label">Method · Scoring</div>
+    <h2>Ranking singular values by their <em>effect on the loss</em>.</h2>
+
+    <p>Let $W \in \mathbb{R}^{m\times n}$ be a layer's weight and $X$ its calibration activations. Following SVD-LLM's whitening, write $A = WS$ where $S$ is the Cholesky factor of $XX^\top$. The whitened gradient $H = \nabla_W \mathcal{L}\cdot S^{-\top}$ tells us how each direction of $W$ moves the loss; combined with $A = U\Sigma V^\top$, the first-order change from zeroing the $i$-th singular value is</p>
+
+    <div class="eq-block">
+      <div class="eq-caption">First-order loss sensitivity of $\sigma_i$</div>
+      $$\Delta\mathcal{L}_i \;\approx\; -\,\sigma_i\,\langle H,\, u_i v_i^\top\rangle \;=\; -\,\sigma_i\, u_i^\top H v_i.$$
+    </div>
+
+    <p>Both <strong>magnitude</strong> and <strong>sign</strong> matter. $|\sigma_i\, u_i^\top H v_i|$ predicts the impact of removing the component; the sign tells us whether removal will <em>increase</em> or <em>decrease</em> the calibration loss. That signed estimate is the lever the rest of the method pulls on.</p>
+
+    <figure>
+      <img src="figures/ZeroSumSVD.jpg" alt="Whitened SVD scoring: each singular value gets a directional-derivative score from the whitened gradient.">
+      <figcaption><span class="figlabel">Figure 1</span>Each singular value of the whitened weight $A = WS$ is scored by the directional derivative of the calibration loss; these scores prioritize truncation across all layers.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ─────────────────────────────── METHOD: ZERO-SUM ─────────────────────────────── -->
+  <section id="method-zerosum">
+    <div class="section-label">Method · Selection</div>
+    <h2>The <em>zero&#8209;sum</em> rule.</h2>
+
+    <div class="dl-balance">
+      <div class="dl-balance-eyebrow">
+        <span>Empirical ΔL sign distribution</span>
+        <span class="meta-right">~917k components · LLaMA-7B</span>
+      </div>
+      <div class="dl-balance-track">
+        <span class="seg neg" style="width: 50.37%"></span>
+        <span class="seg pos" style="width: 49.63%"></span>
+      </div>
+      <div class="dl-balance-row">
+        <span class="tag neg"><strong>50.37%</strong>&nbsp; −ΔL · removal predicts loss ↓</span>
+        <span class="tag pos"><strong>49.63%</strong>&nbsp; +ΔL · removal predicts loss ↑</span>
+      </div>
+      <p class="dl-balance-caption">Across nearly a million singular components, predicted ΔL splits almost exactly evenly between signs. That balance is what makes a zero-sum ledger feasible — there's a steady supply of both directions to draw from.</p>
+    </div>
+
+    <p>Within each matrix we always consider its smallest remaining singular value as the next candidate (preserving spectral order). Globally, we pool one candidate per matrix and split the pool by the <strong>sign</strong> of $\Delta\mathcal{L}$ into two min-heaps $\mathcal{Q}_+$ and $\mathcal{Q}_-$, both keyed by $|\Delta\mathcal{L}|$.</p>
+
+    <p>At each step, let $s = \sum_{j\in\mathcal{D}}\Delta\mathcal{L}_j$ be the running cumulative predicted loss change. We pop from the heap whose sign opposes the current drift:</p>
+
+    <div class="eq-block">
+      <div class="eq-caption">Selection rule</div>
+      $$\text{prefer } \mathcal{Q}_{+} \text{ if } s \le 0, \qquad \text{prefer } \mathcal{Q}_{-} \text{ if } s > 0.$$
+    </div>
+
+    <p>The result: a single greedy pass that simultaneously controls (i) the local reconstruction distortion in whitened space (via $\sigma_i$), (ii) the global predicted task-loss drift (via the zero-sum ledger), and (iii) the parameter budget. <strong>Heterogeneous per-layer ranks fall out for free</strong> — no separate rank-allocation optimization is needed.</p>
+
+    <figure>
+      <img src="figures/zerosum_heap.jpg" alt="Two-heap zero-sum truncation across layers.">
+      <figcaption><span class="figlabel">Figure 2</span>A shared global pool of next-candidate singular values is split into $\mathcal{Q}_+$ and $\mathcal{Q}_-$. The sign of the running sum $s$ decides which heap to pop from, keeping the cumulative predicted loss change near zero throughout selection.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ─────────────────────────────── METHOD: CORRECTION ─────────────────────────────── -->
+  <section id="method-correction">
+    <div class="section-label">Method · Correction</div>
+    <h2>One projected gradient step, <em>then re-truncate</em>.</h2>
+
+    <p>After truncating $W \to W'_k$, the residual is $\Delta W = W - W'_k$. We replace it with the minimum-Frobenius-norm perturbation that matches its first-order loss change — the projection of $\Delta W$ onto the gradient $g$:</p>
+
+    <div class="eq-block">
+      <div class="eq-caption">One-step correction</div>
+      $$\Delta W' \;=\; \frac{\langle g,\,\Delta W\rangle}{\langle g,\,g\rangle}\, g, \qquad g = \nabla_W \mathcal{L}(W'_k).$$
+    </div>
+
+    <p>By Lemma 1 (rank subadditivity), $\mathrm{rank}(W'_k + \Delta W') \le k + \mathrm{rank}(g)$. <strong>The projection error of re-truncation depends only on $\mathrm{rank}(g)$.</strong> Empirically, gradients of pretrained transformers are sharply low-rank — so the re-truncation back to rank $k$ loses very little. The figure below shows the effective rank ratio between gradient and weight across layers and projection types in LLaMA: gradients are typically an order of magnitude lower-rank than weights.</p>
+
+    <figure>
+      <div class="heatmap" role="img" aria-label="Effective-rank ratio heatmap: gradient over weight effective rank, across LLaMA-7B layers and projection types">
+        <div class="heatmap-eyebrow">
+          <span>Effective-rank ratio · gradient ÷ weight</span>
+          <span class="meta-right">LLaMA-7B</span>
+        </div>
+
+        <div class="heatmap-grid">
+          <div></div>
+          <div class="col-h">Down</div>
+          <div class="col-h">Gate</div>
+          <div class="col-h">Up</div>
+          <div class="col-h">Key</div>
+          <div class="col-h">Out</div>
+          <div class="col-h">Query</div>
+          <div class="col-h">Value</div>
+
+          <div class="row-h">L1</div>
+          <div class="cell" style="--a:0.010">0.004</div>
+          <div class="cell" style="--a:0.003">0.001</div>
+          <div class="cell" style="--a:0.003">0.001</div>
+          <div class="cell" style="--a:0.040">0.016</div>
+          <div class="cell" style="--a:0.003">0.001</div>
+          <div class="cell" style="--a:0.068">0.027</div>
+          <div class="cell" style="--a:0.003">0.001</div>
+
+          <div class="row-h">L16</div>
+          <div class="cell bright" style="--a:0.673">0.269</div>
+          <div class="cell bright" style="--a:0.983">0.393</div>
+          <div class="cell bright" style="--a:0.748">0.299</div>
+          <div class="cell bright" style="--a:0.793">0.317</div>
+          <div class="cell bright" style="--a:0.563">0.225</div>
+          <div class="cell bright" style="--a:0.560">0.224</div>
+          <div class="cell" style="--a:0.063">0.025</div>
+
+          <div class="row-h">L32</div>
+          <div class="cell" style="--a:0.058">0.023</div>
+          <div class="cell bright" style="--a:0.555">0.222</div>
+          <div class="cell" style="--a:0.160">0.064</div>
+          <div class="cell" style="--a:0.125">0.050</div>
+          <div class="cell" style="--a:0.423">0.169</div>
+          <div class="cell bright" style="--a:0.505">0.202</div>
+          <div class="cell" style="--a:0.068">0.027</div>
+        </div>
+
+        <div class="heatmap-legend">
+          <span>0</span>
+          <div class="scale" aria-hidden="true"></div>
+          <span>≥ 0.4</span>
+          <span class="legend-tag">ratio scale</span>
+        </div>
+      </div>
+      <figcaption><span class="figlabel">Figure 3</span>Effective-rank ratio $k_{0.95}(G)/k_{0.95}(W')$ — gradient over weight — for every linear projection type across early (L1), middle (L16), and late (L32) layers of LLaMA-7B. With the exception of a few middle-layer cells, ratios stay well below 0.4: gradients are consistently much lower-rank than weights, so re-truncation after the correction step incurs only negligible error.</figcaption>
+    </figure>
+
+    <p style="margin-top: 32px;">In practice this rank-bound argument shows up as a controlled descent in actual loss. Iterating the truncate–correct–re-truncate cycle on LLaMA-7B at 60% pruning produces a decaying zigzag — each truncation introduces a small upward bump, each correction drops the loss further, and the trajectory keeps trending down because the corrections stay close to the rank-$k$ manifold.</p>
+
+    <figure>
+      <div class="convergence" role="img" aria-label="Validation loss across truncate-correct-re-truncate cycles, LLaMA-7B at 60% pruning">
+        <div class="convergence-eyebrow">
+          <span>Truncate → correct → re-truncate</span>
+          <span class="meta-right">LLaMA-7B · 60% pruning · WikiText-2 val loss</span>
+        </div>
+        <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- y-axis gridlines & labels -->
+          <g font-family="'JetBrains Mono', ui-monospace, monospace" font-size="9" fill="#6e6557">
+            <line x1="60" y1="30"  x2="700" y2="30"  stroke="#f1ecdc" stroke-width="1"/>
+            <text x="55" y="33" text-anchor="end">3.85</text>
+            <line x1="60" y1="90"  x2="700" y2="90"  stroke="#f1ecdc" stroke-width="1"/>
+            <text x="55" y="93" text-anchor="end">3.50</text>
+            <line x1="60" y1="150" x2="700" y2="150" stroke="#f1ecdc" stroke-width="1"/>
+            <text x="55" y="153" text-anchor="end">3.20</text>
+            <line x1="60" y1="190" x2="700" y2="190" stroke="#e6dec9" stroke-width="1"/>
+            <text x="55" y="193" text-anchor="end">3.00</text>
+          </g>
+
+          <!-- y-axis title -->
+          <text x="18" y="110" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="9" fill="#6e6557" letter-spacing="0.16em" transform="rotate(-90 18 110)" text-anchor="middle">VAL LOSS</text>
+
+          <!-- main path -->
+          <polyline points="80,38 138,130 196,135 254,156 312,152 370,167 428,160 486,167 544,160 602,179 660,186"
+                    fill="none" stroke="#a64a2a" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+
+          <!-- truncation markers (filled) -->
+          <g fill="#a64a2a" stroke="#ffffff" stroke-width="1.5">
+            <circle cx="80"  cy="38"  r="5"/>
+            <circle cx="196" cy="135" r="5"/>
+            <circle cx="312" cy="152" r="5"/>
+            <circle cx="428" cy="160" r="5"/>
+            <circle cx="544" cy="160" r="5"/>
+            <circle cx="660" cy="186" r="5"/>
+          </g>
+
+          <!-- correction markers (hollow) -->
+          <g fill="#ffffff" stroke="#a64a2a" stroke-width="1.5">
+            <circle cx="138" cy="130" r="3.5"/>
+            <circle cx="254" cy="156" r="3.5"/>
+            <circle cx="370" cy="167" r="3.5"/>
+            <circle cx="486" cy="167" r="3.5"/>
+            <circle cx="602" cy="179" r="3.5"/>
+          </g>
+
+          <!-- numerical annotations on T1 and T6 -->
+          <text x="80" y="22" text-anchor="middle"
+                font-family="'JetBrains Mono', ui-monospace, monospace" font-size="10"
+                fill="#7e3415" font-weight="600">3.81</text>
+          <text x="660" y="178" text-anchor="middle"
+                font-family="'JetBrains Mono', ui-monospace, monospace" font-size="10"
+                fill="#7e3415" font-weight="600">3.02</text>
+
+          <!-- x-axis labels -->
+          <g font-family="'JetBrains Mono', ui-monospace, monospace" font-size="10"
+             fill="#6e6557" text-anchor="middle" letter-spacing="0.06em">
+            <text x="80"  y="210">T1</text>
+            <text x="196" y="210">T2</text>
+            <text x="312" y="210">T3</text>
+            <text x="428" y="210">T4</text>
+            <text x="544" y="210">T5</text>
+            <text x="660" y="210">T6</text>
+          </g>
+        </svg>
+
+        <div class="convergence-legend">
+          <span class="legend-item"><span class="dot t"></span>Truncation</span>
+          <span class="legend-item"><span class="dot c"></span>Correction</span>
+          <span class="legend-tag">3.81 → 3.02 over 5 cycles &nbsp;·&nbsp; uncompressed reference: 1.74</span>
+        </div>
+      </div>
+      <figcaption><span class="figlabel">Figure 4</span>Validation loss after each step of the truncate–correct–re-truncate cycle. Filled dots mark truncations (small upward bumps); hollow dots mark single one-step corrections (each one drops loss further). The aggregate trajectory is a decaying zigzag — empirical confirmation that re-projecting back to the rank-$k$ manifold preserves most of the correction's gain.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ─────────────────────────────── RESULTS ─────────────────────────────── -->
+  <section id="results">
+    <div class="section-label">Results</div>
+    <h2>Consistent gains across <em>models, scales, and ratios</em>.</h2>
+
+    <p>We evaluate language-modeling perplexity on WikiText-2, PTB, and C4, and zero-shot accuracy across seven commonsense reasoning tasks (OpenBookQA, ARC-e/c, WinoGrande, HellaSwag, PIQA, MathQA), following the SVD-LLM and Dobi-SVD calibration protocol (256 sequences of length 2048).</p>
+
+    <h3>30% pruning · LLaMA-7B and Vicuna-7B</h3>
+
+    <div class="table-wrap">
+      <table class="results">
+        <thead>
+          <tr>
+            <th rowspan="2" class="method">Method</th>
+            <th colspan="4" class="group">LLaMA-7B</th>
+            <th colspan="4" class="group split">Vicuna-7B</th>
+          </tr>
+          <tr>
+            <th>WT2 ↓</th><th>PTB ↓</th><th>C4 ↓</th><th>Avg ↑</th>
+            <th class="split">WT2 ↓</th><th>PTB ↓</th><th>C4 ↓</th><th>Avg ↑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="method">ASVD</td><td>95.3</td><td>200.9</td><td>86.3</td><td>0.36</td><td class="split">91.4</td><td>415.6</td><td>136.2</td><td>0.32</td></tr>
+          <tr><td class="method">FWSVD</td><td>33.0</td><td>53.6</td><td>38.2</td><td>0.39</td><td class="split">43.7</td><td>239.3</td><td>64.8</td><td>0.36</td></tr>
+          <tr><td class="method">SVD-LLM</td><td>9.5</td><td>29.0</td><td>26.4</td><td>0.40</td><td class="split">12.4</td><td>124.5</td><td>39.5</td><td>0.40</td></tr>
+          <tr><td class="method">Dip-SVD</td><td>9.4</td><td>22.3</td><td>19.9</td><td>0.44</td><td class="split">12.1</td><td>81.1</td><td>28.8</td><td>0.43</td></tr>
+          <tr class="ours"><td class="method">ZS-SVD <span style="font-weight:400;">(ours)</span></td><td>8.2</td><td>19.6</td><td>16.8</td><td>0.46</td><td class="split">10.2</td><td>48.0</td><td>21.8</td><td>0.46</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Lower is better for perplexity (PPL on WikiText-2 / PTB / C4); higher is better for the average over seven commonsense reasoning tasks.</p>
+
+    <h3>Aggressive compression · LLaMA-2-7B at 60% pruning</h3>
+
+    <div class="table-wrap">
+      <table class="results">
+        <thead>
+          <tr>
+            <th class="method">Method</th>
+            <th>PIQA</th><th>HellaSwag</th><th>WinoGrande</th><th>ARC-e</th><th>ARC-c</th><th>Avg ↑</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="method">SVD-LLM</td><td>0.54</td><td>0.27</td><td>0.48</td><td>0.26</td><td>0.20</td><td>0.35</td></tr>
+          <tr><td class="method">Dobi-SVD<sup>*</sup></td><td>0.67</td><td>0.38</td><td>0.57</td><td>0.55</td><td>0.26</td><td>0.49</td></tr>
+          <tr class="ours"><td class="method">ZS-SVD<sup>†</sup> <span style="font-weight:400;">(ours)</span></td><td>0.73</td><td>0.48</td><td>0.68</td><td>0.70</td><td>0.36</td><td>0.59</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Zero-shot accuracy at 0.4 maintenance ratio (i.e., 60% truncation). $^*$denotes Dobi-SVD without remap; $^\dagger$denotes ZS-SVD with the truncate–correct–re-truncate pipeline. Full tables with ASVD, OPT-6.7B, LLaMA-13B, LLaMA-30B, structured pruning baselines, and ablations are in the paper.</p>
+  </section>
+
+  <!-- ─────────────────────────────── BIBTEX ─────────────────────────────── -->
+  <section id="bibtex">
+    <div class="section-label">Cite</div>
+    <h2>BibTeX</h2>
+    <p style="color: var(--muted); max-width: 60ch;">If you find this work useful, please consider citing it. The arXiv ID will be updated when posted.</p>
+
+    <div class="bibtex-wrap">
+      <button class="copy-btn" id="copy-bib" aria-label="Copy BibTeX">Copy</button>
+      <pre id="bibtex-text">@inproceedings{abbasi2026zerosumsvd,
+  title     = {Zero Sum {SVD}: Balancing Loss Sensitivity for Low Rank {LLM} Compression},
+  author    = {Abbasi, Ali and Thrash, Chayne and Qin, Haoran
+               and Sharma, Shansita and Seifi, Sepehr and Kolouri, Soheil},
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning ({ICML})},
+  year      = {2026},
+  eprint    = {2602.02848},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.LG}
+}</pre>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <footer>
+    <div class="corr-block">
+      Correspondence:
+      <a href="mailto:ali.abbasi@vanderbilt.edu">ali.abbasi@vanderbilt.edu</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:soheil.kolouri@vanderbilt.edu">soheil.kolouri@vanderbilt.edu</a>
+    </div>
+    <div class="credit">© 2026 · Vanderbilt CS · Nanofold.ai</div>
+  </footer>
+
+</main>
+
+<script>
+  // copy bibtex
+  const btn = document.getElementById('copy-bib');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const text = document.getElementById('bibtex-text').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = orig; }, 1400);
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
