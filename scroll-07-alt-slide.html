@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>07 · Alternating slide — Scroll Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:#fff;--bg-soft:#f7f4ec;--ink:#1c1812;--ink-soft:#423c33;--muted:#6e6557;
+    --rule:#e6dec9;--rule-soft:#f1ecdc;--accent:#a64a2a;--accent-deep:#7e3415;--accent-soft:#f6e1d1;
+    --maxw: 880px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 17px; line-height: 1.65; overflow-x: hidden; }
+  .nav-back { position: fixed; top: 18px; left: 18px; z-index: 100; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; background: var(--ink); color: #fff; padding: 8px 14px; border-radius: 6px; text-decoration: none; }
+  .nav-label { position: fixed; top: 18px; right: 18px; z-index: 100; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent); }
+  .hero { max-width: var(--maxw); margin: 0 auto; padding: 120px 32px 56px; text-align: center; }
+  .badge { display: inline-flex; gap: 10px; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #fff; padding: 7px 16px; border-radius: 999px; background: linear-gradient(110deg,#ff6a2c,#ff3b8a,#b66bff,#2cd9ff,#ff6a2c); background-size: 300% 100%; animation: holo 5s ease-in-out infinite; margin-bottom: 24px; }
+  @keyframes holo { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+  .title { font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 600; letter-spacing: -0.035em; line-height: 1.04; margin: 0 0 14px; }
+  .title .zero { color: var(--accent); }
+  .subtitle { font-size: 1.4rem; color: var(--ink-soft); margin: 0; line-height: 1.25; }
+  section { max-width: var(--maxw); margin: 0 auto; padding: 64px 32px; }
+  .label { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: flex; gap: 14px; align-items: center; }
+  .label::before { content: ""; width: 28px; height: 1.5px; background: var(--accent); }
+  h2 { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 22px; }
+  p { margin: 0 0 1em; color: var(--ink-soft); text-align: justify; hyphens: auto; }
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 18px; }
+  .card { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 22px 24px; }
+  .card .n { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 600; color: var(--accent); display: block; margin-bottom: 10px; }
+  .card h4 { margin: 0 0 8px; font-size: 1.05rem; font-weight: 600; }
+  .card p { font-size: 0.94rem; color: var(--muted); margin: 0; line-height: 1.6; }
+  .abstract { background: var(--bg-soft); padding: 36px 40px; border-radius: 10px; }
+  .abstract p { margin: 0; font-size: 1.08rem; line-height: 1.75; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { padding: 10px 14px; text-align: right; border-bottom: 1px solid var(--rule-soft); }
+  th { background: var(--bg-soft); font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  td:first-child, th:first-child { text-align: left; }
+
+  /* ─── ANIMATION: alternating slide L/R ─── */
+  .reveal {
+    opacity: 0;
+    transition: opacity 0.7s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.from-left  { transform: translateX(-80px); }
+  .reveal.from-right { transform: translateX(80px); }
+  .reveal.in-view { opacity: 1; transform: translateX(0); }
+</style>
+</head>
+<body>
+
+<a class="nav-back" href="scroll-index.html">← all</a>
+<span class="nav-label">07 · Alt slide</span>
+
+<header class="hero reveal from-left">
+  <span class="badge">ICML 2026 · Accepted</span>
+  <h1 class="title"><span class="zero">Zero Sum</span> SVD</h1>
+  <p class="subtitle">Balancing Loss Sensitivity for Low-Rank LLM Compression</p>
+</header>
+
+<section class="reveal from-right"><div class="label">Abstract</div><div class="abstract"><p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. We propose Zero-Sum SVD, a post-training method that performs global singular-component selection using activation whitening and first-order calibration-loss estimates.</p></div></section>
+
+<section class="reveal from-left"><div class="label">Contributions</div><h2>Three ideas.</h2><div class="card-grid"><div class="card"><span class="n">01</span><h4>First-order singular sensitivity</h4><p>Each component scored by its directional derivative on the calibration loss.</p></div><div class="card"><span class="n">02</span><h4>Zero-sum global selection</h4><p>Two-heap greedy rule keeps the running predicted loss change near zero.</p></div><div class="card"><span class="n">03</span><h4>Truncate–correct–re-truncate</h4><p>One projected-gradient step recovers loss; re-truncation incurs negligible error.</p></div></div></section>
+
+<section class="reveal from-right"><div class="label">Method · Scoring</div><h2>Ranking singular values by their effect on the loss.</h2><p>Let $W$ be a layer's weight and $X$ its calibration activations. The whitened gradient $H$ tells us how each direction of $W$ moves the loss. Combined with the SVD of the whitened weight, the first-order change from zeroing the $i$-th singular value is a signed sensitivity score.</p><p>Both magnitude and sign matter.</p></section>
+
+<section class="reveal from-left"><div class="label">Results</div><h2>Consistent gains across models and ratios.</h2><p>We evaluate language-modeling perplexity on WikiText-2, PTB, and C4.</p><table><thead><tr><th>Method</th><th>WT2 ↓</th><th>PTB ↓</th><th>C4 ↓</th><th>Avg ↑</th></tr></thead><tbody><tr><td>SVD-LLM</td><td>9.5</td><td>29.0</td><td>26.4</td><td>0.40</td></tr><tr><td>Dip-SVD</td><td>9.4</td><td>22.3</td><td>19.9</td><td>0.44</td></tr><tr style="background: var(--accent-soft);"><td><strong>ZS-SVD</strong></td><td><strong>8.2</strong></td><td><strong>19.6</strong></td><td><strong>16.8</strong></td><td><strong>0.46</strong></td></tr></tbody></table></section>
+
+<section class="reveal from-right"><div class="label">Cite</div><h2>BibTeX</h2><p>If you find this work useful, please cite the paper.</p></section>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

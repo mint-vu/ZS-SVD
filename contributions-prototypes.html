@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contributions Card Prototypes — ZS-SVD</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f7f4ec;
+    --surface: #ffffff;
+    --ink: #1c1812;
+    --ink-soft: #423c33;
+    --muted: #6e6557;
+    --rule: #e6dec9;
+    --rule-soft: #f1ecdc;
+    --accent: #a64a2a;
+    --accent-deep: #7e3415;
+    --accent-soft: #f6e1d1;
+    --indigo: #1f3a5f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+  }
+
+  .page-header {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 32px 24px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 auto;
+    max-width: 64ch;
+  }
+
+  .proto-list {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+    display: grid;
+    gap: 36px;
+  }
+  .proto {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .proto-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .proto-meta .num { color: var(--accent); font-weight: 600; }
+  .proto-meta .tip { color: var(--accent); }
+  .proto-body { padding: 40px 36px; }
+
+  /* ── shared base ──────────────────────────────────────────── */
+  .tldr { display: grid; gap: 18px; }
+  .tldr-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 24px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease,
+                border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+    position: relative;
+    cursor: default;
+    will-change: transform;
+  }
+  .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    display: block;
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+    transition: color 0.25s ease, transform 0.3s ease;
+  }
+  .tldr-card h4 {
+    margin: 0 0 8px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    transition: color 0.25s ease;
+  }
+  .tldr-card p {
+    font-size: 0.94rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.6;
+    transition: color 0.25s ease;
+  }
+
+  /* ── 01 · current baseline (lift + soft shadow) ───────────── */
+  .v1 .tldr { grid-template-columns: repeat(3, 1fr); }
+  .v1 .tldr-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px -20px rgba(28,24,18,0.22);
+  }
+
+  /* ── 02 · color flood on hover ────────────────────────────── */
+  .v2 .tldr { grid-template-columns: repeat(3, 1fr); }
+  .v2 .tldr-card:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-3px);
+  }
+  .v2 .tldr-card:hover .num { color: rgba(255,235,220,0.85); }
+  .v2 .tldr-card:hover h4   { color: #fff; }
+  .v2 .tldr-card:hover p    { color: rgba(255,235,220,0.92); }
+
+  /* ── 03 · left rail grows ─────────────────────────────────── */
+  .v3 .tldr { grid-template-columns: repeat(3, 1fr); }
+  .v3 .tldr-card {
+    border-left: 2px solid var(--rule);
+    padding-left: 22px;
+    transition: border-left-width 0.25s ease, border-left-color 0.25s ease,
+                padding-left 0.25s ease, transform 0.25s ease;
+  }
+  .v3 .tldr-card:hover {
+    border-left: 6px solid var(--accent);
+    padding-left: 26px;
+    transform: translateX(2px);
+  }
+
+  /* ── 04 · 3D tilt perspective ─────────────────────────────── */
+  .v4 .tldr { grid-template-columns: repeat(3, 1fr); perspective: 800px; }
+  .v4 .tldr-card { transform-style: preserve-3d; }
+  .v4 .tldr-card:hover {
+    transform: rotateX(4deg) rotateY(-4deg) translateZ(6px);
+    box-shadow: 0 24px 50px -28px rgba(28,24,18,0.35);
+  }
+
+  /* ── 05 · reveal description on hover ─────────────────────── */
+  .v5 .tldr { grid-template-columns: repeat(3, 1fr); }
+  .v5 .tldr-card {
+    overflow: hidden;
+    padding-bottom: 22px;
+  }
+  .v5 .tldr-card p {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.4s ease;
+  }
+  .v5 .tldr-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .v5 .tldr-card:hover p {
+    max-height: 240px;
+    opacity: 1;
+    margin-top: 10px;
+  }
+  .v5 .tldr-card::after {
+    content: "Hover";
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .v5 .tldr-card:hover::after { opacity: 0; }
+
+  /* ── 06 · animated gradient border ────────────────────────── */
+  .v6 .tldr { grid-template-columns: repeat(3, 1fr); }
+  .v6 .tldr-card {
+    background: var(--surface);
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--surface), var(--surface)) padding-box,
+      linear-gradient(135deg, var(--rule), var(--rule)) border-box;
+  }
+  .v6 .tldr-card:hover {
+    background:
+      linear-gradient(var(--surface), var(--surface)) padding-box,
+      conic-gradient(from 0deg, #ff6a2c, #ff3b8a, #b66bff, #2cd9ff, #ff6a2c) border-box;
+    animation: v6-spin 4s linear infinite;
+    transform: translateY(-2px);
+  }
+  @keyframes v6-spin {
+    to { --bg-rot: 1turn; }
+  }
+
+  /* ── 07 · vertical timeline with connector ────────────────── */
+  .v7 .tldr { grid-template-columns: 1fr; position: relative; padding-left: 38px; }
+  .v7 .tldr::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    background: var(--rule);
+  }
+  .v7 .tldr-card { position: relative; }
+  .v7 .tldr-card::before {
+    content: "";
+    position: absolute;
+    left: -28px;
+    top: 28px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--accent);
+    transition: transform 0.25s, background 0.25s;
+  }
+  .v7 .tldr-card:hover { transform: translateX(4px); border-color: var(--accent); }
+  .v7 .tldr-card:hover::before { background: var(--accent); transform: scale(1.3); }
+
+  /* ── 08 · bento asymmetric ────────────────────────────────── */
+  .v8 .tldr {
+    grid-template-columns: 1.4fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 16px;
+  }
+  .v8 .tldr-card:nth-child(1) { grid-row: 1 / span 2; }
+  .v8 .tldr-card:nth-child(1) .num { font-size: 1.8rem; }
+  .v8 .tldr-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px -20px rgba(28,24,18,0.22);
+    border-color: var(--accent);
+  }
+
+  /* ── 09 · horizontal scroll cards ─────────────────────────── */
+  .v9-scroll {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+  }
+  .v9 .tldr {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    width: max-content;
+    min-width: 100%;
+  }
+  .v9 .tldr-card {
+    scroll-snap-align: start;
+    min-width: 280px;
+  }
+  .v9 .tldr-card:hover {
+    transform: scale(1.03);
+    z-index: 2;
+    box-shadow: 0 16px 36px -16px rgba(28,24,18,0.25);
+    border-color: var(--accent);
+  }
+  .v9-scroll::-webkit-scrollbar { height: 8px; }
+  .v9-scroll::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 4px; }
+  .v9-scroll::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 4px; }
+
+  /* ── 10 · spotlight (hover grows, siblings fade) ──────────── */
+  .v10 .tldr { grid-template-columns: repeat(3, 1fr); transition: filter 0.25s; }
+  .v10 .tldr-card { transition: transform 0.3s ease, opacity 0.3s, filter 0.3s, border-color 0.3s; }
+  .v10 .tldr:hover .tldr-card { opacity: 0.45; filter: saturate(0.7); transform: scale(0.97); }
+  .v10 .tldr:hover .tldr-card:hover {
+    opacity: 1;
+    filter: none;
+    transform: scale(1.04);
+    border-color: var(--accent);
+    box-shadow: 0 20px 44px -22px rgba(28,24,18,0.3);
+    z-index: 2;
+  }
+
+  /* responsive collapse */
+  @media (max-width: 720px) {
+    .v1 .tldr, .v2 .tldr, .v3 .tldr, .v4 .tldr,
+    .v5 .tldr, .v6 .tldr, .v10 .tldr { grid-template-columns: 1fr; }
+    .v8 .tldr { grid-template-columns: 1fr; }
+    .v8 .tldr-card:nth-child(1) { grid-row: auto; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-header">
+  <h1>Contributions Card Prototypes · ZS-SVD</h1>
+  <p>Ten layouts and hover interactions for the three contribution cards. Same content in every prototype — only the spatial arrangement and the on-hover behavior change. <strong style="color: var(--accent); font-weight: 600;">Hover over the cards</strong> to see each interaction.</p>
+</div>
+
+<div class="proto-list">
+
+  <!-- 01 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">01</span> · Lift + soft shadow <em style="color:var(--accent); font-style: normal;">(current)</em></span><span class="tip">hover → translateY + drop shadow</span></div>
+    <div class="proto-body v1">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">02</span> · Color flood</span><span class="tip">hover → fills with accent, text inverts</span></div>
+    <div class="proto-body v2">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">03</span> · Left rail grows</span><span class="tip">hover → left border 2 → 6px, slides right</span></div>
+    <div class="proto-body v3">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">04</span> · 3D tilt perspective</span><span class="tip">hover → rotateX/Y with shadow</span></div>
+    <div class="proto-body v4">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">05</span> · Reveal description</span><span class="tip">hover → body expands from hidden</span></div>
+    <div class="proto-body v5">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">06</span> · Animated gradient border</span><span class="tip">hover → rainbow conic border</span></div>
+    <div class="proto-body v6">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">07</span> · Vertical timeline</span><span class="tip">hover → dot fills, card slides right</span></div>
+    <div class="proto-body v7">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">08</span> · Bento asymmetric</span><span class="tip">first card spans tall, others stack right</span></div>
+    <div class="proto-body v8">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates — a signed score that tells us how much (and in which direction) each singular component nudges the calibration loss.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">09</span> · Horizontal scroll snap</span><span class="tip">scroll → snap; hover → card pops</span></div>
+    <div class="proto-body v9">
+      <div class="v9-scroll">
+        <div class="tldr">
+          <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+          <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+          <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">10</span> · Spotlight focus</span><span class="tip">hover → focused card grows, others fade</span></div>
+    <div class="proto-body v10">
+      <div class="tldr">
+        <div class="tldr-card"><span class="num">01</span><h4>First-order singular sensitivity</h4><p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates.</p></div>
+        <div class="tldr-card"><span class="num">02</span><h4>Zero-sum global selection</h4><p>A two-heap greedy rule pulls components so the running sum of predicted loss changes stays near zero.</p></div>
+        <div class="tldr-card"><span class="num">03</span><h4>Light truncate–correct–re-truncate</h4><p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

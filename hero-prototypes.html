@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Layout Prototypes — ZS-SVD</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f7f4ec;
+    --ink: #1c1812;
+    --ink-soft: #423c33;
+    --muted: #6e6557;
+    --rule: #e6dec9;
+    --rule-soft: #f1ecdc;
+    --accent: #a64a2a;
+    --accent-deep: #7e3415;
+    --accent-soft: #f6e1d1;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .page-header {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 32px 24px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 auto;
+    max-width: 64ch;
+  }
+
+  /* ── shared building blocks ────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 7px 16px;
+    border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 999px;
+    background: linear-gradient(110deg,
+      #ff6a2c 0%, #ff3b8a 25%, #b66bff 50%, #2cd9ff 75%, #ff6a2c 100%);
+    background-size: 300% 100%;
+    animation: holo 5s ease-in-out infinite;
+    text-shadow: 0 0 6px rgba(0,0,0,0.25);
+    box-shadow: 0 0 14px rgba(255,59,138,0.3), 0 0 30px rgba(44,217,255,0.22);
+    white-space: nowrap;
+  }
+  .badge::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(255,255,255,0.9);
+  }
+  @keyframes holo {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .logo {
+    display: block;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 8px 24px -10px rgba(28,24,18,0.25);
+  }
+
+  .title-main {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1.9rem, 4.4vw, 2.7rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    margin: 0 0 10px;
+  }
+  .title-main .zero { color: var(--accent); font-weight: 600; }
+
+  .title-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1.05rem, 2.1vw, 1.45rem);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 32ch;
+  }
+  .title-sub .em { color: var(--ink); font-weight: 600; }
+
+  .authors {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .authors sup { font-family: 'JetBrains Mono', monospace; font-size: 0.7em; color: var(--accent); }
+  .affiliations {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-top: 8px;
+  }
+  .affiliations sup { font-family: 'JetBrains Mono', monospace; color: var(--accent); margin-right: 3px; }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--bg);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    transition: transform 0.12s ease, background 0.18s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent); border-color: var(--accent); transform: translateY(-1px); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--ink);
+  }
+  .btn.secondary:hover { background: var(--ink); color: var(--bg); }
+
+  /* ── prototype frame ───────────────────────────────────────── */
+  .proto-list {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .proto {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px -8px rgba(28,24,18,0.06);
+  }
+  .proto-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .proto-meta .num { color: var(--accent); font-weight: 600; }
+  .proto-body { padding: 56px 40px 56px; }
+
+  /* ── #01 centered stack ────────────────────────────────────── */
+  .h1 { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .h1 .title-sub { margin: 0 auto; }
+  .h1 .actions { justify-content: center; }
+  .h1 .affiliations { text-align: center; }
+
+  /* ── #02 logo left, content right ──────────────────────────── */
+  .h2 { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: start; }
+  .h2 .logo { width: 140px; height: 140px; }
+  .h2 .right { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+
+  /* ── #03 logo right, content left ──────────────────────────── */
+  .h3 { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start; }
+  .h3 .logo { width: 140px; height: 140px; grid-column: 2; grid-row: 1; }
+  .h3 .left { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; grid-column: 1; grid-row: 1; }
+
+  /* ── #04 magazine drop-cap ─────────────────────────────────── */
+  .h4 .logo {
+    float: left;
+    width: 150px;
+    height: 150px;
+    margin: 4px 24px 12px 0;
+    shape-outside: circle();
+  }
+  .h4 .badge { margin-bottom: 14px; }
+  .h4 .title-main { margin-top: 2px; }
+  .h4 .title-sub { margin: 8px 0 18px; max-width: 100%; }
+  .h4 .authors, .h4 .affiliations { clear: none; }
+  .h4 .actions { clear: both; padding-top: 14px; }
+
+  /* ── #05 background watermark ──────────────────────────────── */
+  .h5 {
+    position: relative;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 30px 0;
+  }
+  .h5 .logo-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    object-fit: cover;
+    opacity: 0.10;
+    filter: saturate(1.1);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .h5 > *:not(.logo-bg) { position: relative; z-index: 1; }
+  .h5 .title-sub { margin: 0 auto; }
+  .h5 .actions { justify-content: center; }
+  .h5 .affiliations { text-align: center; }
+
+  /* ── #06 top bar (badge L, buttons R) ──────────────────────── */
+  .h6-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 38px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .h6-main {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .h6-main .title-sub { margin: 0 auto; }
+  .h6-main .affiliations { text-align: center; }
+  .h6 .actions { margin: 0; }
+
+  /* ── #07 card hero (corners + content) ─────────────────────── */
+  .h7 {
+    position: relative;
+    background: linear-gradient(180deg, var(--bg-soft) 0%, #fffaf0 100%);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 32px 36px 28px;
+    min-height: 320px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 22px;
+  }
+  .h7-row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .h7 .logo { width: 84px; height: 84px; }
+  .h7-row2 .title-main { margin-bottom: 12px; }
+  .h7-row3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .h7-row3 .meta { flex: 1; min-width: 280px; }
+  .h7-row3 .actions { margin: 0; }
+
+  /* ── #08 inline tight (badge+logo row, then content) ───────── */
+  .h8 {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .h8 .top-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .h8 .top-row .logo { width: 56px; height: 56px; }
+  .h8 .title-sub { margin: 0 auto; }
+  .h8 .affiliations { text-align: center; }
+  .h8 .actions { justify-content: center; }
+
+  /* ── #09 title first, logo stamp below title ───────────────── */
+  .h9 {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .h9 .title-main { font-size: clamp(2.2rem, 5vw, 3rem); margin: 0; }
+  .h9 .badge { order: -1; }
+  .h9 .stamp-logo {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-soft);
+    padding: 4px;
+    background: #fff;
+    box-shadow: 0 4px 16px -6px rgba(166,74,42,0.25);
+  }
+  .h9 .title-sub { margin: 0 auto; }
+  .h9 .affiliations { text-align: center; }
+  .h9 .actions { justify-content: center; }
+
+  /* ── #10 asymmetric grid ───────────────────────────────────── */
+  .h10 {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 18px 32px;
+    align-items: center;
+  }
+  .h10 .badge-cell { grid-column: 1 / -1; }
+  .h10 .logo { width: 132px; height: 132px; grid-column: 1; grid-row: 2; }
+  .h10 .title-block { grid-column: 2; grid-row: 2; }
+  .h10 .title-block .title-sub { max-width: 100%; margin-top: 6px; }
+  .h10 .meta-cell {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+  }
+  .h10 .meta-cell .info { flex: 1; min-width: 260px; }
+  .h10 .meta-cell .actions { margin: 0; }
+
+  /* responsive collapse for split layouts */
+  @media (max-width: 700px) {
+    .h2, .h3, .h10 { grid-template-columns: 1fr; }
+    .h3 .logo, .h3 .left { grid-column: 1; }
+    .h3 .logo { grid-row: 1; }
+    .h3 .left { grid-row: 2; }
+    .h10 .logo, .h10 .title-block { grid-column: 1; }
+    .h10 .logo { grid-row: 2; margin: 0 auto; }
+    .h10 .title-block { grid-row: 3; text-align: center; }
+    .h4 .logo { float: none; display: block; margin: 0 auto 18px; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-header">
+  <h1>Hero Layout Prototypes · ZS-SVD</h1>
+  <p>Ten layouts for arranging the logo, ICML shimmer badge, title, authors, affiliations, and Paper/Code/BibTeX buttons at the top of the page. Same content in every prototype — only the spatial arrangement changes.</p>
+</div>
+
+<div class="proto-list">
+
+  <!-- 01 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">01</span> · Centered stack <em style="color:var(--accent)">(current)</em></span><span>everything stacked, all centered</span></div>
+    <div class="proto-body h1">
+      <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+      <span class="badge">ICML 2026 · Accepted</span>
+      <div>
+        <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+        <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+      </div>
+      <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+      <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+      <div class="actions">
+        <a class="btn" href="#">Paper</a>
+        <a class="btn secondary" href="#">Code</a>
+        <a class="btn secondary" href="#">BibTeX</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">02</span> · Logo left + content right</span><span>two-column, left-aligned content</span></div>
+    <div class="proto-body h2">
+      <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+      <div class="right">
+        <span class="badge">ICML 2026 · Accepted</span>
+        <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+        <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+        <div class="authors" style="margin-top:6px;">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+        <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+        <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">03</span> · Logo right + content left</span><span>mirror of 02</span></div>
+    <div class="proto-body h3">
+      <div class="left">
+        <span class="badge">ICML 2026 · Accepted</span>
+        <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+        <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+        <div class="authors" style="margin-top:6px;">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+        <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+        <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+      </div>
+      <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">04</span> · Magazine drop-cap</span><span>logo as a drop-cap, text wraps around</span></div>
+    <div class="proto-body h4">
+      <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+      <span class="badge">ICML 2026 · Accepted</span>
+      <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+      <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+      <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+      <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+      <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">05</span> · Background watermark</span><span>oversized faded logo behind centered content</span></div>
+    <div class="proto-body h5">
+      <img class="logo-bg" src="zssvd-gpt-Photoroom.png" alt="">
+      <span class="badge">ICML 2026 · Accepted</span>
+      <div>
+        <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+        <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+      </div>
+      <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+      <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+      <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+    </div>
+  </div>
+
+  <!-- 06 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">06</span> · Top bar + centered content</span><span>badge top-L, buttons top-R, then logo + title</span></div>
+    <div class="proto-body h6">
+      <div class="h6-top">
+        <span class="badge">ICML 2026 · Accepted</span>
+        <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+      </div>
+      <div class="h6-main">
+        <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+        <div>
+          <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+          <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+        </div>
+        <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+        <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">07</span> · Card hero</span><span>logo corner, badge corner, content fills the card</span></div>
+    <div class="proto-body" style="padding:24px 24px 28px;">
+      <div class="h7">
+        <div class="h7-row1">
+          <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+          <span class="badge">ICML 2026 · Accepted</span>
+        </div>
+        <div class="h7-row2">
+          <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+          <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+        </div>
+        <div class="h7-row3">
+          <div class="meta">
+            <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+            <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+          </div>
+          <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">08</span> · Tight inline (small logo + badge row)</span><span>compact intro, big title</span></div>
+    <div class="proto-body h8">
+      <div class="top-row">
+        <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+        <span class="badge">ICML 2026 · Accepted</span>
+      </div>
+      <div>
+        <h1 class="title-main" style="font-size: clamp(2.2rem, 5vw, 3rem);"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+        <p class="title-sub" style="margin: 8px auto 0;"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+      </div>
+      <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+      <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+      <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+    </div>
+  </div>
+
+  <!-- 09 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">09</span> · Title first, logo as stamp</span><span>title at top, logo seal beneath, the rest follows</span></div>
+    <div class="proto-body h9">
+      <span class="badge">ICML 2026 · Accepted</span>
+      <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+      <p class="title-sub" style="margin: 0 auto;"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+      <img class="stamp-logo" src="zssvd-gpt-Photoroom.png" alt="">
+      <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+      <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+      <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">10</span> · Asymmetric grid</span><span>badge top, logo + title side-by-side, meta row beneath</span></div>
+    <div class="proto-body h10">
+      <div class="badge-cell"><span class="badge">ICML 2026 · Accepted</span></div>
+      <img class="logo" src="zssvd-gpt-Photoroom.png" alt="">
+      <div class="title-block">
+        <h1 class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</h1>
+        <p class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</p>
+      </div>
+      <div class="meta-cell">
+        <div class="info">
+          <div class="authors">Ali Abbasi<sup>1</sup>, Chayne Thrash<sup>1</sup>, Haoran Qin<sup>1</sup>, Shansita Sharma<sup>1</sup>, Sepehr Seifi<sup>1</sup>, Soheil Kolouri<sup>1,2,3</sup></div>
+          <div class="affiliations"><sup>1</sup>Vanderbilt CS &nbsp;·&nbsp; <sup>2</sup>Vanderbilt ECE &nbsp;·&nbsp; <sup>3</sup>Nanofold.ai</div>
+        </div>
+        <div class="actions"><a class="btn" href="#">Paper</a><a class="btn secondary" href="#">Code</a><a class="btn secondary" href="#">BibTeX</a></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

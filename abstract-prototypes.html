@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abstract Prototypes — ZS-SVD</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Crimson+Pro:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f7f4ec;
+    --surface: #ffffff;
+    --ink: #1c1812;
+    --ink-soft: #423c33;
+    --muted: #6e6557;
+    --rule: #e6dec9;
+    --rule-soft: #f1ecdc;
+    --accent: #a64a2a;
+    --accent-deep: #7e3415;
+    --accent-soft: #f6e1d1;
+
+    --font-display: 'Newsreader', ui-serif, Georgia, serif;
+    --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+  }
+
+  .page-header {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 32px 24px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 auto;
+    max-width: 64ch;
+  }
+
+  .proto-list {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .proto {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .proto-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .proto-meta .num { color: var(--accent); font-weight: 600; }
+  .proto-meta .specs { color: var(--muted); }
+  .proto-body { padding: 38px 36px 40px; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: "";
+    width: 22px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* ──────────────── 01 · current baseline ──────────────── */
+  .a1 {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 32px 36px;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(28,24,18,0.025), 0 12px 32px -16px rgba(28,24,18,0.08);
+  }
+  .a1 p {
+    font-family: var(--font-body);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 1.05em;
+  }
+  .a1 p:last-child { margin-bottom: 0; }
+  .a1 p:first-of-type::first-letter {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 3.4em;
+    line-height: 0.85;
+    float: left;
+    color: var(--accent);
+    margin: 0.06em 0.08em -0.05em 0;
+  }
+
+  /* ──────────────── 02 · larger + airy ──────────────── */
+  .a2 {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 40px 44px;
+    border-radius: 4px;
+  }
+  .a2 p {
+    font-family: var(--font-body);
+    font-size: 1.12rem;
+    line-height: 1.78;
+    color: var(--ink-soft);
+    margin: 0 0 1.2em;
+  }
+  .a2 p:last-child { margin-bottom: 0; }
+
+  /* ──────────────── 03 · serif for readability ──────────────── */
+  .a3 {
+    background: var(--surface);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 36px 0;
+  }
+  .a3 p {
+    font-family: var(--font-display);
+    font-size: 1.18rem;
+    line-height: 1.72;
+    color: var(--ink-soft);
+    margin: 0 0 1.1em;
+    font-weight: 400;
+  }
+  .a3 p:last-child { margin-bottom: 0; }
+  .a3 p:first-of-type::first-letter {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 3.6em;
+    line-height: 0.85;
+    float: left;
+    color: var(--accent);
+    margin: 0.06em 0.1em -0.05em 0;
+  }
+
+  /* ──────────────── 04 · Inter, balanced ──────────────── */
+  .a4 {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 36px 40px;
+    border-radius: 6px;
+  }
+  .a4 p {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.08rem;
+    line-height: 1.72;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+    margin: 0 0 1.1em;
+  }
+  .a4 p:last-child { margin-bottom: 0; }
+
+  /* ──────────────── 05 · two-column ──────────────── */
+  .a5 {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 36px 36px;
+    columns: 2;
+    column-gap: 36px;
+    column-rule: 1px solid var(--rule-soft);
+  }
+  .a5 p {
+    font-family: var(--font-body);
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 1em;
+    break-inside: avoid;
+  }
+  .a5 p:last-child { margin-bottom: 0; }
+
+  /* ──────────────── 06 · minimalist, no box ──────────────── */
+  .a6 { padding: 8px 8px 0; }
+  .a6 p {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.14rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+    margin: 0 0 1.3em;
+    max-width: 64ch;
+  }
+  .a6 p:last-child { margin-bottom: 0; }
+  .a6 p:first-of-type {
+    border-left: 2px solid var(--accent);
+    padding-left: 22px;
+    margin-left: -24px;
+  }
+
+  /* ──────────────── 07 · emphasized lede ──────────────── */
+  .a7 {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 36px 40px;
+    border-radius: 6px;
+  }
+  .a7 p {
+    font-family: var(--font-body);
+    color: var(--ink-soft);
+    margin: 0 0 1.05em;
+  }
+  .a7 p:first-of-type {
+    font-size: 1.22rem;
+    line-height: 1.6;
+    color: var(--ink);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .a7 p:nth-of-type(2) {
+    font-size: 1.0rem;
+    line-height: 1.72;
+  }
+  .a7 p:last-child { margin-bottom: 0; }
+
+  /* ──────────────── 08 · pull-quote callout ──────────────── */
+  .a8 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .a8 .lede {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 28px 32px;
+    border-radius: 4px;
+    color: var(--accent-deep);
+    font-family: var(--font-display);
+    font-size: 1.28rem;
+    line-height: 1.55;
+    font-weight: 400;
+    font-style: italic;
+    margin: 0;
+  }
+  .a8 p.body {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    line-height: 1.72;
+    color: var(--ink-soft);
+    margin: 0;
+    padding: 0 8px;
+  }
+
+  /* ──────────────── 09 · soft cream card ──────────────── */
+  .a9 {
+    background: var(--bg-soft);
+    padding: 40px 44px;
+    border-radius: 10px;
+  }
+  .a9 p {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+    margin: 0 0 1.15em;
+  }
+  .a9 p:last-child { margin-bottom: 0; }
+
+  /* ──────────────── 10 · Crimson Pro, literary ──────────────── */
+  .a10 {
+    background: var(--surface);
+    border-top: 2px solid var(--accent);
+    border-bottom: 1px solid var(--rule);
+    padding: 32px 0 36px;
+  }
+  .a10 p {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.25rem;
+    line-height: 1.62;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin: 0 0 1em;
+  }
+  .a10 p:last-child { margin-bottom: 0; }
+  .a10 p strong { color: var(--ink); font-weight: 600; }
+
+</style>
+</head>
+
+<body>
+
+<div class="page-header">
+  <h1>Abstract Prototypes · ZS-SVD</h1>
+  <p>Ten variants of the abstract section — different fonts, sizes, line-heights, and treatments. Same text in every prototype, so you can compare how each one reads.</p>
+</div>
+
+<div class="proto-list">
+
+  <!-- 01 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">01</span> · Current baseline <em style="color:var(--accent)">(in production)</em></span><span class="specs">Jakarta · 1.02rem · LH 1.65 · drop cap</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a1">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">02</span> · Larger + airy</span><span class="specs">Jakarta · 1.12rem · LH 1.78 · padded</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a2">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">03</span> · Serif (Newsreader), generous</span><span class="specs">Newsreader · 1.18rem · LH 1.72 · drop cap</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a3">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">04</span> · Inter, balanced</span><span class="specs">Inter · 1.08rem · LH 1.72</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a4">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">05</span> · Two-column</span><span class="specs">Jakarta · 0.98rem · 2-col · LH 1.7</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a5">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">06</span> · Minimal, no box (left accent rule)</span><span class="specs">Inter · 1.14rem · LH 1.85</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a6">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">07</span> · Emphasized lede paragraph</span><span class="specs">Jakarta · lede 1.22rem / body 1.0rem</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a7">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">08</span> · Pull-quote callout + body</span><span class="specs">Newsreader italic lede / Jakarta body 1.05rem</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a8">
+        <p class="lede">Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio.</p>
+        <p class="body">We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">09</span> · Soft cream card (no border)</span><span class="specs">IBM Plex Sans · 1.08rem · LH 1.75</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a9">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="proto">
+    <div class="proto-meta"><span><span class="num">10</span> · Crimson Pro, literary</span><span class="specs">Crimson Pro · 1.25rem · LH 1.62 · accent top rule</span></div>
+    <div class="proto-body">
+      <div class="section-label">Abstract</div>
+      <div class="a10">
+        <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
+        <p>We propose <strong>Zero&#8209;Sum SVD (ZS&#8209;SVD)</strong>, a post-training method that performs <em>global</em> singular-component selection using activation whitening and first-order calibration-loss estimates in whitened coordinates. ZS&#8209;SVD prunes components across the whole model with a <strong>zero-sum</strong> rule that keeps the cumulative predicted loss change near zero, automatically yielding heterogeneous ranks without solving a rank-allocation optimization. Motivated by evidence that gradients near pretrained solutions exhibit low-rank structure, we also introduce an optional lightweight correction that applies a <strong>single</strong> projected gradient update after truncation, followed by re-truncation. Extensive experiments across multiple LLM architectures show consistent gains across diverse benchmarks and compression ratios.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

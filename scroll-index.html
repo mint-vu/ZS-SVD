@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scroll Animation Prototypes — ZS-SVD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #ffffff; --bg-soft: #f7f4ec; --ink: #1c1812; --ink-soft: #423c33;
+    --muted: #6e6557; --rule: #e6dec9; --rule-soft: #f1ecdc;
+    --accent: #a64a2a; --accent-deep: #7e3415; --accent-soft: #f6e1d1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 17px; line-height: 1.6;
+  }
+  .header { max-width: 980px; margin: 0 auto; padding: 72px 32px 32px; text-align: center; }
+  .header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin: 0 0 12px;
+  }
+  .header h2 { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 14px; }
+  .header p { color: var(--muted); margin: 0 auto; max-width: 64ch; font-size: 0.98rem; }
+
+  .grid {
+    max-width: 980px; margin: 0 auto; padding: 24px 32px 80px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+  }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+  .item {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--bg-soft); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 26px 28px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px -20px rgba(28,24,18,0.22);
+    border-color: var(--accent);
+  }
+  .item .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem; letter-spacing: 0.18em; color: var(--accent);
+    font-weight: 600; margin-bottom: 8px;
+  }
+  .item h3 { margin: 0 0 6px; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+  .item p { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.55; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Scroll Animation Prototypes</h1>
+  <h2>Pick a scroll behavior.</h2>
+  <p>Ten prototype pages, each demonstrating a different scroll-triggered animation pattern as you move from section to section. Open them in tabs and compare.</p>
+</div>
+
+<div class="grid">
+
+  <a class="item" href="scroll-01-fade.html">
+    <div class="num">01</div>
+    <h3>Fade-in</h3>
+    <p>Sections fade from transparent as they enter the viewport. The quietest option — almost subliminal.</p>
+  </a>
+
+  <a class="item" href="scroll-02-slide-up.html">
+    <div class="num">02</div>
+    <h3>Slide-up + fade</h3>
+    <p>Each section rises ~40px from below while fading in. The classic, most-used pattern on modern sites.</p>
+  </a>
+
+  <a class="item" href="scroll-03-stagger.html">
+    <div class="num">03</div>
+    <h3>Stagger reveal</h3>
+    <p>Child elements (headings, paragraphs, cards) animate in sequence within each section.</p>
+  </a>
+
+  <a class="item" href="scroll-04-parallax.html">
+    <div class="num">04</div>
+    <h3>Parallax</h3>
+    <p>Background drifts slower than foreground content, creating depth as you scroll.</p>
+  </a>
+
+  <a class="item" href="scroll-05-sticky-stack.html">
+    <div class="num">05</div>
+    <h3>Sticky stack</h3>
+    <p>Sections stick at the top while the next scrolls over them — pages feel like layered cards.</p>
+  </a>
+
+  <a class="item" href="scroll-06-scale.html">
+    <div class="num">06</div>
+    <h3>Scale-in</h3>
+    <p>Sections start slightly smaller (0.95×) and grow to full size + opacity as they enter view.</p>
+  </a>
+
+  <a class="item" href="scroll-07-alt-slide.html">
+    <div class="num">07</div>
+    <h3>Alternating slide</h3>
+    <p>Odd sections slide in from the left, even ones from the right — gives a rhythmic side-to-side feel.</p>
+  </a>
+
+  <a class="item" href="scroll-08-clip-reveal.html">
+    <div class="num">08</div>
+    <h3>Clip-path wipe</h3>
+    <p>Sections reveal via a top-down clip-path mask, like a curtain rising.</p>
+  </a>
+
+  <a class="item" href="scroll-09-blur-focus.html">
+    <div class="num">09</div>
+    <h3>Blur to focus</h3>
+    <p>Sections start blurred and sharpen into focus as they enter view. Cinematic.</p>
+  </a>
+
+  <a class="item" href="scroll-10-rotate.html">
+    <div class="num">10</div>
+    <h3>3D rotate</h3>
+    <p>Sections rotate slightly on the X axis as they enter, like pages flipping toward the viewer.</p>
+  </a>
+
+</div>
+
+</body>
+</html>

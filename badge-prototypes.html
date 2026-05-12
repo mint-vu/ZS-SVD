@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICML Badge Prototypes — ZS-SVD</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@500;700;900&family=VT323&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:        #ffffff;
+    --bg-soft:   #f7f4ec;
+    --ink:       #1c1812;
+    --ink-soft:  #423c33;
+    --muted:     #6e6557;
+    --rule:      #e6dec9;
+    --rule-soft: #f1ecdc;
+    --accent:    #a64a2a;
+    --accent-deep:#7e3415;
+    --accent-soft:#f6e1d1;
+
+    /* neon palette */
+    --neon-orange: #ff6a2c;
+    --neon-pink:   #ff3b8a;
+    --neon-cyan:   #2cd9ff;
+    --neon-violet: #b66bff;
+    --neon-green:  #46f0a4;
+    --neon-amber:  #ffb13c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .page-header {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 32px 24px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 auto;
+    max-width: 64ch;
+  }
+
+  .grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 32px 80px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-soft);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 36px 28px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+  }
+  .card.dark {
+    background: #110d08;
+    border-color: #2a221a;
+    color: #f4ebd9;
+  }
+  .card-num {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .card.dark .card-num { color: var(--neon-orange); }
+  .card-label {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card.dark .card-label { color: #8a7a64; }
+  .card-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .card.dark .card-name { color: #8a7a64; }
+
+  /* ── shared base for badges ────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 999px;
+    position: relative;
+  }
+
+  /* ─────────── 01 · Original (warm pastel, static) ─────────── */
+  .b1 {
+    color: var(--accent-deep);
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .b1::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(166,74,42,0.18);
+  }
+
+  /* ─────────── 02 · Pulsing dot only ─────────── */
+  .b2 {
+    color: var(--accent-deep);
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .b2::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--neon-orange);
+    box-shadow: 0 0 0 0 rgba(255,106,44,0.7);
+    animation: pulse-dot 1.8s ease-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%   { box-shadow: 0 0 0 0   rgba(255,106,44,0.7); }
+    70%  { box-shadow: 0 0 0 10px rgba(255,106,44,0); }
+    100% { box-shadow: 0 0 0 0   rgba(255,106,44,0); }
+  }
+
+  /* ─────────── 03 · Neon tube glow on dark ─────────── */
+  .b3 {
+    color: var(--neon-orange);
+    border: 1.5px solid var(--neon-orange);
+    background: #0a0805;
+    text-shadow:
+      0 0 4px rgba(255,106,44,0.9),
+      0 0 10px rgba(255,106,44,0.7),
+      0 0 22px rgba(255,106,44,0.5);
+    box-shadow:
+      inset 0 0 8px rgba(255,106,44,0.35),
+      0 0 6px rgba(255,106,44,0.5),
+      0 0 16px rgba(255,106,44,0.35),
+      0 0 32px rgba(255,106,44,0.25);
+    animation: neon-breathe 2.6s ease-in-out infinite;
+  }
+  .b3::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--neon-orange);
+    box-shadow:
+      0 0 6px var(--neon-orange),
+      0 0 14px var(--neon-orange);
+  }
+  @keyframes neon-breathe {
+    0%, 100% {
+      box-shadow:
+        inset 0 0 8px rgba(255,106,44,0.35),
+        0 0 6px rgba(255,106,44,0.5),
+        0 0 16px rgba(255,106,44,0.35),
+        0 0 32px rgba(255,106,44,0.25);
+    }
+    50% {
+      box-shadow:
+        inset 0 0 12px rgba(255,106,44,0.6),
+        0 0 12px rgba(255,106,44,0.8),
+        0 0 28px rgba(255,106,44,0.55),
+        0 0 56px rgba(255,106,44,0.35);
+    }
+  }
+
+  /* ─────────── 04 · Flickering neon (retro sign) ─────────── */
+  .b4 {
+    color: var(--neon-pink);
+    border: 1.5px solid var(--neon-pink);
+    background: #0a0508;
+    text-shadow:
+      0 0 4px rgba(255,59,138,0.95),
+      0 0 12px rgba(255,59,138,0.7),
+      0 0 22px rgba(255,59,138,0.5);
+    box-shadow:
+      inset 0 0 8px rgba(255,59,138,0.35),
+      0 0 8px rgba(255,59,138,0.45),
+      0 0 22px rgba(255,59,138,0.3);
+    animation: flicker 4.4s linear infinite;
+  }
+  .b4::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--neon-pink);
+    box-shadow: 0 0 8px var(--neon-pink);
+  }
+  @keyframes flicker {
+    0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 1; }
+    20%, 21.9%, 63%, 63.9%, 65%, 69.9%           { opacity: 0.35; }
+  }
+
+  /* ─────────── 05 · Light sweep / shimmer ─────────── */
+  .b5 {
+    color: var(--accent-deep);
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    overflow: hidden;
+  }
+  .b5::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(166,74,42,0.18);
+    flex-shrink: 0;
+    z-index: 2;
+  }
+  .b5::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg,
+      transparent 0%,
+      transparent 35%,
+      rgba(255,255,255,0.65) 50%,
+      transparent 65%,
+      transparent 100%);
+    transform: translateX(-100%);
+    animation: sweep 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes sweep {
+    0%   { transform: translateX(-100%); }
+    60%  { transform: translateX(100%);  }
+    100% { transform: translateX(100%);  }
+  }
+
+  /* ─────────── 06 · Conic border-chase (rotating ring) ─────────── */
+  .b6 {
+    color: var(--neon-amber);
+    background: #0a0805;
+    border: none;
+    padding: 9px 17px;
+    position: relative;
+    z-index: 0;
+    text-shadow: 0 0 6px rgba(255,177,60,0.6);
+  }
+  .b6::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--neon-amber);
+    box-shadow: 0 0 6px var(--neon-amber);
+  }
+  .b6-wrap {
+    position: relative;
+    display: inline-block;
+    padding: 2px;
+    border-radius: 999px;
+    background: conic-gradient(from 0deg,
+      var(--neon-orange),
+      var(--neon-pink),
+      var(--neon-violet),
+      var(--neon-cyan),
+      var(--neon-orange));
+    animation: spin 3.2s linear infinite;
+    box-shadow: 0 0 18px rgba(255,106,44,0.35);
+  }
+  .b6-wrap > .b6 {
+    border-radius: 999px;
+    display: inline-flex;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─────────── 07 · LED dot-matrix marquee ─────────── */
+  .b7 {
+    color: var(--neon-green);
+    font-family: 'VT323', 'JetBrains Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background:
+      radial-gradient(circle at center, #0e1a10 0%, #050a06 100%);
+    border: 1px solid #1f3a25;
+    overflow: hidden;
+    width: 240px;
+    height: 34px;
+    position: relative;
+    box-shadow:
+      inset 0 0 6px rgba(70,240,164,0.25),
+      0 0 14px rgba(70,240,164,0.2);
+  }
+  .b7-inner {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 9s linear infinite;
+    text-shadow:
+      0 0 4px rgba(70,240,164,0.9),
+      0 0 8px rgba(70,240,164,0.6);
+    padding-left: 100%;
+  }
+  .b7::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(0,0,0,0.45) 1px, transparent 1.5px);
+    background-size: 4px 4px;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ─────────── 08 · Holographic shimmer ─────────── */
+  .b8 {
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+    background: linear-gradient(110deg,
+      #ff6a2c 0%,
+      #ff3b8a 25%,
+      #b66bff 50%,
+      #2cd9ff 75%,
+      #ff6a2c 100%);
+    background-size: 300% 100%;
+    animation: holo 5s ease-in-out infinite;
+    text-shadow: 0 0 6px rgba(0,0,0,0.25);
+    box-shadow:
+      0 0 16px rgba(255,59,138,0.35),
+      0 0 32px rgba(44,217,255,0.25);
+  }
+  .b8::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(255,255,255,0.9);
+  }
+  @keyframes holo {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* ─────────── 09 · Outline neon (hollow tube) ─────────── */
+  .b9 {
+    color: var(--neon-cyan);
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    text-shadow:
+      0 0 4px rgba(44,217,255,0.95),
+      0 0 12px rgba(44,217,255,0.7);
+    box-shadow:
+      0 0 6px rgba(44,217,255,0.5),
+      0 0 14px rgba(44,217,255,0.35),
+      inset 0 0 6px rgba(44,217,255,0.2);
+    transition: box-shadow 0.4s ease;
+  }
+  .b9::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--neon-cyan);
+    box-shadow:
+      0 0 6px var(--neon-cyan),
+      0 0 12px var(--neon-cyan);
+  }
+  .b9:hover {
+    box-shadow:
+      0 0 14px rgba(44,217,255,0.8),
+      0 0 28px rgba(44,217,255,0.5),
+      inset 0 0 10px rgba(44,217,255,0.35);
+  }
+
+  /* ─────────── 10 · Sparkle / particles ─────────── */
+  .b10 {
+    color: var(--accent-deep);
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    position: relative;
+  }
+  .b10::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(166,74,42,0.18);
+  }
+  .b10-spark {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--neon-amber);
+    box-shadow: 0 0 6px var(--neon-amber);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .b10-spark.s1 { top: -2px;   left: 16%;  animation: sparkle 2.4s ease-in-out infinite; }
+  .b10-spark.s2 { bottom: -2px; left: 38%; animation: sparkle 2.4s ease-in-out 0.6s infinite; }
+  .b10-spark.s3 { top: -4px;   right: 26%; animation: sparkle 2.4s ease-in-out 1.1s infinite; }
+  .b10-spark.s4 { bottom: -2px; right: 12%; animation: sparkle 2.4s ease-in-out 1.7s infinite; }
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.6); }
+    50%      { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* footer hint */
+  .footer-hint {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 60px;
+    text-align: center;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page-header">
+  <h1>Badge Prototypes · ZS-SVD</h1>
+  <p>Ten variants for the “ICML 2026 · Accepted” chip. Includes the current static badge, animated pulses, glowing neon (LED-style) treatments, marquee, holographic shimmer, and a sparkle effect. Each runs live — just look.</p>
+</div>
+
+<div class="grid">
+
+  <!-- 01 -->
+  <div class="card">
+    <div class="card-num">01</div>
+    <div class="card-label">Static / Current</div>
+    <span class="badge b1">ICML 2026 · Accepted</span>
+    <div class="card-name">Warm Pastel · Pastille</div>
+  </div>
+
+  <!-- 02 -->
+  <div class="card">
+    <div class="card-num">02</div>
+    <div class="card-label">Pulsing dot</div>
+    <span class="badge b2">ICML 2026 · Accepted</span>
+    <div class="card-name">Recording-style Pulse</div>
+  </div>
+
+  <!-- 03 — featured neon -->
+  <div class="card dark">
+    <div class="card-num">03</div>
+    <div class="card-label">Neon · Orange</div>
+    <span class="badge b3">ICML 2026 · Accepted</span>
+    <div class="card-name">Breathing Neon Tube</div>
+  </div>
+
+  <!-- 04 -->
+  <div class="card dark">
+    <div class="card-num">04</div>
+    <div class="card-label">Neon · Pink</div>
+    <span class="badge b4">ICML 2026 · Accepted</span>
+    <div class="card-name">Flickering Sign</div>
+  </div>
+
+  <!-- 05 -->
+  <div class="card">
+    <div class="card-num">05</div>
+    <div class="card-label">Sweep</div>
+    <span class="badge b5">ICML 2026 · Accepted</span>
+    <div class="card-name">Light-sweep Shimmer</div>
+  </div>
+
+  <!-- 06 -->
+  <div class="card dark">
+    <div class="card-num">06</div>
+    <div class="card-label">Rotating ring</div>
+    <span class="b6-wrap">
+      <span class="badge b6">ICML 2026 · Accepted</span>
+    </span>
+    <div class="card-name">Conic Border Chase</div>
+  </div>
+
+  <!-- 07 -->
+  <div class="card dark">
+    <div class="card-num">07</div>
+    <div class="card-label">LED matrix</div>
+    <span class="badge b7">
+      <span class="b7-inner">▸ ACCEPTED AT ICML 2026 ▸ ZERO SUM SVD ▸ </span>
+    </span>
+    <div class="card-name">Dot-matrix Marquee</div>
+  </div>
+
+  <!-- 08 -->
+  <div class="card dark">
+    <div class="card-num">08</div>
+    <div class="card-label">Holographic</div>
+    <span class="badge b8">ICML 2026 · Accepted</span>
+    <div class="card-name">Iridescent Shimmer</div>
+  </div>
+
+  <!-- 09 -->
+  <div class="card dark">
+    <div class="card-num">09</div>
+    <div class="card-label">Neon · Cyan</div>
+    <span class="badge b9">ICML 2026 · Accepted</span>
+    <div class="card-name">Hollow Tube (hover boosts)</div>
+  </div>
+
+  <!-- 10 -->
+  <div class="card">
+    <div class="card-num">10</div>
+    <div class="card-label">Sparkle</div>
+    <span class="badge b10">
+      ICML 2026 · Accepted
+      <span class="b10-spark s1"></span>
+      <span class="b10-spark s2"></span>
+      <span class="b10-spark s3"></span>
+      <span class="b10-spark s4"></span>
+    </span>
+    <div class="card-name">Ambient Sparkles</div>
+  </div>
+
+</div>
+
+<div class="footer-hint">Tip · open <code style="background:var(--rule-soft);padding:2px 6px;border-radius:3px;">badge-prototypes.html</code> alongside the main page to compare.</div>
+
+</body>
+</html>

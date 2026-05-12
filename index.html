@@ -11,7 +11,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="katex/katex.min.css">
 <script defer src="katex/katex.min.js"></script>
@@ -46,8 +46,8 @@
     --indigo:    #1f3a5f;          /* secondary, drawn from the heap figure */
     --indigo-soft:#dde4ee;
 
-    --font-display: 'Newsreader', ui-serif, Georgia, serif;
-    --font-body:    'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --font-body:    'IBM Plex Sans', system-ui, -apple-system, sans-serif;
     --font-mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;
 
     --maxw: 880px;
@@ -66,7 +66,18 @@
     line-height: 1.65;
     font-weight: 400;
     letter-spacing: -0.005em;
+    overflow-x: hidden;
   }
+
+  /* scroll reveal: alternating slide L/R */
+  .reveal {
+    opacity: 0;
+    transition: opacity 0.7s ease, transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.from-left  { transform: translateX(-80px); }
+  .reveal.from-right { transform: translateX(80px); }
+  .reveal.in-view    { opacity: 1; transform: translateX(0); }
 
   main, header, footer { position: relative; z-index: 1; }
 
@@ -79,62 +90,135 @@
     padding: 88px 32px 56px;
   }
 
+  .logo-wrap {
+    float: left;
+    position: relative;
+    display: block;
+    width: 170px;
+    height: 170px;
+    margin: 6px 30px 14px 0;
+    border-radius: 50%;
+    shape-outside: circle();
+  }
+  .logo-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    opacity: 0;
+    transform: scale(1);
+    pointer-events: none;
+  }
+  .logo-wrap:hover::after {
+    animation: pulse-ring 1.4s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0%   { opacity: 0.55; transform: scale(1); }
+    100% { opacity: 0;    transform: scale(1.35); }
+  }
+  .logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 8px 28px -10px rgba(28,24,18,0.25);
+  }
+  @media (max-width: 640px) {
+    .logo-wrap {
+      float: none;
+      width: 130px;
+      height: 130px;
+      margin: 0 auto 20px;
+      shape-outside: none;
+    }
+  }
+
   .venue {
-    display: inline-flex;
+    display: flex;
+    width: fit-content;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-family: var(--font-mono);
-    font-size: 11.5px;
-    font-weight: 500;
+    font-size: 15.5px;
+    font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--accent-deep);
-    padding: 7px 14px;
-    border: 1px solid var(--accent);
+    color: #ffffff;
+    padding: 9px 22px;
+    border: 1px solid rgba(255,255,255,0.45);
     border-radius: 999px;
-    background: var(--accent-soft);
-    margin-bottom: 28px;
+    background: linear-gradient(110deg,
+      #ff6a2c 0%,
+      #ff3b8a 25%,
+      #b66bff 50%,
+      #2cd9ff 75%,
+      #ff6a2c 100%);
+    background-size: 300% 100%;
+    animation: holo 5s ease-in-out infinite;
+    text-shadow: 0 0 8px rgba(0,0,0,0.28);
+    box-shadow:
+      0 0 22px rgba(255,59,138,0.4),
+      0 0 44px rgba(44,217,255,0.3);
+    margin: 0 0 18px;
   }
   .venue::before {
     content: "";
-    width: 6px; height: 6px;
+    width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px rgba(166,74,42,0.18);
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(255,255,255,0.95);
+  }
+  @keyframes holo {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   h1.title {
-    font-family: var(--font-display);
-    font-weight: 380;
-    font-size: clamp(2.2rem, 5.4vw, 3.6rem);
-    line-height: 1.04;
-    letter-spacing: -0.025em;
-    margin: 0 0 8px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+    font-style: normal;
     color: var(--ink);
-    font-variation-settings: "opsz" 72;
+    margin: 0 0 14px;
+    overflow: hidden;
+  }
+  h1.title .title-main {
+    display: block;
+    font-size: clamp(2.2rem, 5.4vw, 3.4rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1.title .title-sub {
+    display: block;
+    font-size: clamp(1.25rem, 2.6vw, 1.7rem);
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    color: var(--ink-soft);
   }
   h1.title .zero {
-    font-style: italic;
-    font-weight: 360;
     color: var(--accent);
-    font-variation-settings: "opsz" 72;
+    font-weight: 600;
   }
   h1.title .em {
-    font-style: italic;
-    font-weight: 380;
-    color: var(--ink-soft);
-    font-variation-settings: "opsz" 72;
+    color: var(--ink);
+    font-weight: 600;
   }
 
   .subtitle {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 300;
+    font-family: var(--font-body);
+    font-weight: 400;
     font-size: 1.18rem;
     color: var(--muted);
     margin: 6px 0 36px;
     letter-spacing: -0.005em;
   }
+
+  em { font-style: normal; }
 
   /* authors */
   .authors {
@@ -171,6 +255,16 @@
     margin-right: 4px;
     font-weight: 500;
   }
+  .affiliations a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    transition: color 0.18s, border-color 0.18s;
+  }
+  .affiliations a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
 
   /* action buttons */
   .actions {
@@ -178,6 +272,7 @@
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 38px;
+    clear: both;
   }
   .btn {
     display: inline-flex;
@@ -231,107 +326,129 @@
 
   .section-label {
     font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.22em;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--accent);
-    margin-bottom: 14px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
   }
   .section-label::before {
     content: "";
-    width: 22px;
-    height: 1px;
+    width: 28px;
+    height: 1.5px;
     background: var(--accent);
   }
 
   h2 {
-    font-family: var(--font-display);
-    font-weight: 380;
-    font-size: clamp(1.7rem, 3vw, 2.15rem);
-    line-height: 1.15;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 2rem;
+    line-height: 1.2;
     letter-spacing: -0.02em;
     margin: 0 0 28px;
     color: var(--ink);
-    font-variation-settings: "opsz" 48;
   }
-  h2 em { font-style: italic; color: var(--accent); font-variation-settings: "opsz" 48; }
+  h2 em { color: var(--accent); font-weight: 600; }
 
   h3 {
-    font-family: var(--font-display);
-    font-weight: 500;
+    font-family: var(--font-body);
+    font-weight: 600;
     font-size: 1.2rem;
     margin: 32px 0 12px;
     color: var(--ink);
     letter-spacing: -0.01em;
-    font-variation-settings: "opsz" 24;
   }
 
-  p { margin: 0 0 1.05em; }
+  p {
+    margin: 0 0 1.05em;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
   p strong { font-weight: 600; color: var(--ink); }
   a.inline { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent-soft); }
   a.inline:hover { border-bottom-style: solid; }
 
   /* abstract block */
   .abstract {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-left: 3px solid var(--accent);
-    padding: 32px 36px;
-    border-radius: 4px;
-    box-shadow: 0 1px 0 rgba(28,24,18,0.025), 0 12px 32px -16px rgba(28,24,18,0.08);
+    background: var(--bg-soft);
+    padding: 40px 44px;
+    border-radius: 10px;
   }
-  .abstract p { font-size: 1.02rem; color: var(--ink-soft); margin-bottom: 0; }
-  .abstract p:first-of-type::first-letter {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-style: italic;
-    font-size: 3.4em;
-    line-height: 0.85;
-    float: left;
-    color: var(--accent);
-    margin: 0.06em 0.08em -0.05em 0;
-    font-variation-settings: "opsz" 72;
+  .abstract p {
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+    margin: 0 0 1.15em;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
   }
+  .abstract p:last-child { margin-bottom: 0; }
 
   /* tldr / contributions */
   .tldr {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 18px;
     margin-top: 20px;
+    perspective: 800px;
   }
   .tldr-card {
     background: var(--surface);
     border: 1px solid var(--rule);
     border-radius: 4px;
     padding: 22px 24px;
-    transition: transform 0.18s, box-shadow 0.18s;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
   }
-  .tldr-card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px -20px rgba(28,24,18,0.18); }
+  .tldr-card:hover {
+    transform: rotateX(4deg) rotateY(-4deg) translateZ(6px);
+    box-shadow: 0 24px 50px -28px rgba(28,24,18,0.35);
+    border-color: var(--accent-soft);
+  }
   .tldr-card .num {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 350;
-    font-style: italic;
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 600;
     color: var(--accent);
     line-height: 1;
     display: block;
-    margin-bottom: 8px;
-    font-variation-settings: "opsz" 48;
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
   }
   .tldr-card h4 {
     margin: 0 0 8px;
-    font-family: var(--font-display);
-    font-weight: 500;
+    font-family: var(--font-body);
+    font-weight: 600;
     font-size: 1.05rem;
     color: var(--ink);
     letter-spacing: -0.005em;
   }
   .tldr-card p { font-size: 0.94rem; color: var(--muted); margin: 0; line-height: 1.6; }
+  .tldr-card .card-eq {
+    margin: 14px -8px 10px;
+    padding: 10px 8px;
+    background: var(--bg-soft);
+    border-radius: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .tldr-card .card-eq .katex-display { font-size: 0.88em; margin: 0 !important; }
+  .tldr-card .card-eq .katex { color: var(--ink); }
+  .tldr-card .card-note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 6px 0 0;
+    line-height: 1.55;
+  }
 
   /* figures */
   figure {
@@ -372,6 +489,14 @@
     border: 1px solid var(--rule);
     border-radius: 4px;
     overflow-x: auto;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .eq-block:hover {
+    transform: perspective(900px) rotateX(3.5deg) rotateY(-3.5deg) translateZ(6px);
+    box-shadow: 0 24px 50px -28px rgba(28,24,18,0.35);
+    border-color: var(--accent-soft);
   }
   .eq-block .eq-caption {
     font-family: var(--font-mono);
@@ -516,7 +641,7 @@
     flex-wrap: wrap;
     gap: 16px;
   }
-  footer .corr-block { font-style: italic; }
+  footer .corr-block { font-style: normal; }
   footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
   footer a:hover { color: var(--accent); border-bottom-color: var(--accent); }
   footer .credit {
@@ -533,6 +658,14 @@
     border-radius: 4px;
     padding: 20px 22px 18px;
     margin: 18px 0 26px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .dl-balance:hover {
+    transform: perspective(900px) rotateX(3.5deg) rotateY(-3.5deg) translateZ(6px);
+    box-shadow: 0 24px 50px -28px rgba(28,24,18,0.35);
+    border-color: var(--accent-soft);
   }
   .dl-balance-eyebrow {
     display: flex;
@@ -576,8 +709,7 @@
   .dl-balance-row .tag.neg strong { color: var(--indigo); font-weight: 700; font-family: var(--font-mono); }
   .dl-balance-row .tag.pos strong { color: var(--accent); font-weight: 700; font-family: var(--font-mono); }
   .dl-balance-caption {
-    font-family: var(--font-display);
-    font-style: italic;
+    font-family: var(--font-body);
     font-size: 0.95rem;
     color: var(--muted);
     margin: 14px 0 0;
@@ -618,6 +750,20 @@
     height: auto;
     display: block;
   }
+  /* scroll-triggered draw animation */
+  .convergence svg polyline {
+    stroke-dasharray: 720;
+    stroke-dashoffset: 720;
+    transition: stroke-dashoffset 2.6s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  .convergence.draw svg polyline { stroke-dashoffset: 0; }
+  .convergence svg circle,
+  .convergence svg text[fill="#7e3415"] {
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+  .convergence.draw svg circle,
+  .convergence.draw svg text[fill="#7e3415"] { opacity: 1; }
   .convergence-legend {
     display: flex;
     align-items: center;
@@ -636,8 +782,7 @@
   .convergence-legend .dot.c { background: #ffffff; border: 1.5px solid var(--accent); }
   .convergence-legend .legend-tag {
     margin-left: auto;
-    font-family: var(--font-display);
-    font-style: italic;
+    font-family: var(--font-body);
     font-size: 0.88rem;
     letter-spacing: 0;
     text-transform: none;
@@ -697,14 +842,15 @@
   .heatmap-grid .row-h {
     font-family: var(--font-mono);
     font-size: 0.66rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color: var(--muted);
     font-weight: 500;
   }
   .heatmap-grid .col-h {
     text-align: center;
     padding: 4px 0 10px;
+    line-height: 1.35;
   }
   .heatmap-grid .row-h {
     color: var(--accent);
@@ -713,7 +859,7 @@
     align-self: center;
   }
   .heatmap-grid .cell {
-    background: rgba(166, 74, 42, var(--a));
+    background: rgba(166, 74, 42, calc(var(--a) * 0.55));
     padding: 13px 2px;
     text-align: center;
     font-family: var(--font-mono);
@@ -721,12 +867,13 @@
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
     color: var(--ink);
+    border: 1px solid var(--rule);
     border-radius: 2px;
     transition: transform 0.15s ease;
     cursor: default;
   }
   .heatmap-grid .cell:hover { transform: scale(1.06); }
-  .heatmap-grid .cell.bright { color: #ffffff; }
+  .heatmap-grid .cell.bright { color: var(--ink); }
 
   .heatmap-legend {
     display: flex;
@@ -743,13 +890,12 @@
     flex: 1;
     max-width: 220px;
     height: 6px;
-    background: linear-gradient(to right, rgba(166, 74, 42, 0.025), rgba(166, 74, 42, 1));
+    background: linear-gradient(to right, rgba(166, 74, 42, 0.015), rgba(166, 74, 42, 0.55));
     border-radius: 2px;
   }
   .heatmap-legend .legend-tag {
     margin-left: auto;
-    font-family: var(--font-display);
-    font-style: italic;
+    font-family: var(--font-body);
     font-size: 0.85rem;
     letter-spacing: 0;
     text-transform: none;
@@ -775,14 +921,14 @@
 <main>
 
   <!-- ─────────────────────────────── HERO ─────────────────────────────── -->
-  <header class="hero">
+  <header class="hero reveal from-left">
+    <span class="logo-wrap"><img class="logo" src="zssvd-gpt-Photoroom.png" alt="ZS-SVD logo"></span>
     <div class="venue">ICML 2026 · Accepted</div>
 
     <h1 class="title">
-      <span class="zero">Zero&nbsp;Sum</span> SVD<span style="color: var(--rule);">&nbsp;·&nbsp;</span><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression
+      <span class="title-main"><span class="zero">Zero&nbsp;Sum</span> SVD</span>
+      <span class="title-sub"><span class="em">Balancing Loss Sensitivity</span> for Low-Rank LLM Compression</span>
     </h1>
-
-    <div class="subtitle">A global, signed first-order rule for picking <em>which</em> singular components to drop.</div>
 
     <div class="authors">
       Ali Abbasi<sup>1</sup>,&nbsp;
@@ -794,9 +940,9 @@
     </div>
 
     <div class="affiliations">
-      <span><sup>1</sup>Department of Computer Science, College of Connected Computing, Vanderbilt University</span><br>
-      <span><sup>2</sup>Department of Electrical and Computer Engineering, Vanderbilt University</span><br>
-      <span><sup>3</sup>Nanofold.ai</span>
+      <span><sup>1</sup><a href="https://engineering.vanderbilt.edu/departments/computer-science/" target="_blank" rel="noopener">Department of Computer Science</a>, <a href="https://computing.vanderbilt.edu" target="_blank" rel="noopener">College of Connected Computing</a>, Vanderbilt University</span><br>
+      <span><sup>2</sup><a href="https://engineering.vanderbilt.edu/departments/electrical-computer-engineering/" target="_blank" rel="noopener">Department of Electrical and Computer Engineering</a>, Vanderbilt University</span><br>
+      <span><sup>3</sup><a href="https://www.nanofold.ai" target="_blank" rel="noopener">Nanofold.ai</a></span>
     </div>
 
     <div class="actions">
@@ -818,7 +964,7 @@
   <div class="divider"><hr></div>
 
   <!-- ─────────────────────────────── ABSTRACT ─────────────────────────────── -->
-  <section id="abstract">
+  <section id="abstract" class="reveal from-right">
     <div class="section-label">Abstract</div>
     <div class="abstract">
       <p>Advances in large language models have driven strong performance across many tasks, but their memory and compute costs still hinder deployment. SVD-based compression reduces storage and can speed up inference via low-rank factors, yet performance depends on how rank is allocated under a global compression ratio. Prior methods often use homogeneous ranks for similarly sized matrices, despite large differences in loss sensitivity, or rely on expensive iterative pre-truncation optimization to determine per-matrix ranks.</p>
@@ -827,16 +973,19 @@
   </section>
 
   <!-- ─────────────────────────────── TLDR ─────────────────────────────── -->
-  <section id="contributions">
+  <section id="contributions" class="reveal from-left">
     <div class="section-label">Contributions</div>
-    <h2>Three ideas, one budget.</h2>
+    <h2>Three ideas.</h2>
     <p style="color: var(--muted); max-width: 56ch;">ZS-SVD does not pre-allocate ranks per layer. It treats every singular component in the model as a candidate and decides what to drop with a single, principled rule.</p>
 
     <div class="tldr">
       <div class="tldr-card">
         <span class="num">01</span>
         <h4>First-order singular sensitivity</h4>
-        <p>For each component we estimate its directional derivative on the calibration loss in whitened coordinates: $\Delta\mathcal{L}_i \approx -\sigma_i\, u_i^\top H v_i$, with $H = \nabla_W\mathcal{L} \cdot S^{-\top}$.</p>
+        <p>Each component is scored by its directional derivative on the calibration loss:</p>
+        <div class="card-eq">$$\Delta\mathcal{L}_i \approx -\sigma_i\, u_i^\top H v_i$$</div>
+        <p class="card-note">in whitened coordinates, with:</p>
+        <div class="card-eq">$$H = \nabla_W\mathcal{L} \cdot S^{-\top}$$</div>
       </div>
       <div class="tldr-card">
         <span class="num">02</span>
@@ -848,16 +997,13 @@
         <h4>Light truncate–correct–re-truncate</h4>
         <p>One projected-gradient step briefly leaves the low-rank manifold to recover loss; re-truncation incurs negligible error because gradients near pretrained solutions are themselves low-rank.</p>
       </div>
-      <div class="tldr-card">
-        <span class="num">04</span>
-        <h4>Hardware-agnostic, fast</h4>
-        <p>No specialized kernels, no expensive per-layer rank optimization, real wall-clock speedups. Improves perplexity and zero-shot accuracy across LLaMA, Vicuna, OPT, and 7B–30B scales.</p>
-      </div>
     </div>
+
+    <p style="margin-top: 22px;">Together, these three ideas need no specialized kernels and no expensive per-layer rank-allocation step, delivering real wall-clock speedups with consistent improvements in perplexity and zero-shot accuracy across LLaMA, Vicuna, OPT, and 7B–30B scales.</p>
   </section>
 
   <!-- ─────────────────────────────── METHOD: SCORING ─────────────────────────────── -->
-  <section id="method-scoring">
+  <section id="method-scoring" class="reveal from-right">
     <div class="section-label">Method · Scoring</div>
     <h2>Ranking singular values by their <em>effect on the loss</em>.</h2>
 
@@ -877,7 +1023,7 @@
   </section>
 
   <!-- ─────────────────────────────── METHOD: ZERO-SUM ─────────────────────────────── -->
-  <section id="method-zerosum">
+  <section id="method-zerosum" class="reveal from-left">
     <div class="section-label">Method · Selection</div>
     <h2>The <em>zero&#8209;sum</em> rule.</h2>
 
@@ -915,7 +1061,7 @@
   </section>
 
   <!-- ─────────────────────────────── METHOD: CORRECTION ─────────────────────────────── -->
-  <section id="method-correction">
+  <section id="method-correction" class="reveal from-right">
     <div class="section-label">Method · Correction</div>
     <h2>One projected gradient step, <em>then re-truncate</em>.</h2>
 
@@ -937,15 +1083,15 @@
 
         <div class="heatmap-grid">
           <div></div>
-          <div class="col-h">Down</div>
-          <div class="col-h">Gate</div>
-          <div class="col-h">Up</div>
-          <div class="col-h">Key</div>
-          <div class="col-h">Out</div>
-          <div class="col-h">Query</div>
-          <div class="col-h">Value</div>
+          <div class="col-h">down</div>
+          <div class="col-h">gate</div>
+          <div class="col-h">up</div>
+          <div class="col-h">key</div>
+          <div class="col-h">out</div>
+          <div class="col-h">query</div>
+          <div class="col-h">value</div>
 
-          <div class="row-h">L1</div>
+          <div class="row-h">layers.0</div>
           <div class="cell" style="--a:0.010">0.004</div>
           <div class="cell" style="--a:0.003">0.001</div>
           <div class="cell" style="--a:0.003">0.001</div>
@@ -954,7 +1100,7 @@
           <div class="cell" style="--a:0.068">0.027</div>
           <div class="cell" style="--a:0.003">0.001</div>
 
-          <div class="row-h">L16</div>
+          <div class="row-h">layers.15</div>
           <div class="cell bright" style="--a:0.673">0.269</div>
           <div class="cell bright" style="--a:0.983">0.393</div>
           <div class="cell bright" style="--a:0.748">0.299</div>
@@ -963,7 +1109,7 @@
           <div class="cell bright" style="--a:0.560">0.224</div>
           <div class="cell" style="--a:0.063">0.025</div>
 
-          <div class="row-h">L32</div>
+          <div class="row-h">layers.31</div>
           <div class="cell" style="--a:0.058">0.023</div>
           <div class="cell bright" style="--a:0.555">0.222</div>
           <div class="cell" style="--a:0.160">0.064</div>
@@ -980,7 +1126,7 @@
           <span class="legend-tag">ratio scale</span>
         </div>
       </div>
-      <figcaption><span class="figlabel">Figure 3</span>Effective-rank ratio $k_{0.95}(G)/k_{0.95}(W')$ — gradient over weight — for every linear projection type across early (L1), middle (L16), and late (L32) layers of LLaMA-7B. With the exception of a few middle-layer cells, ratios stay well below 0.4: gradients are consistently much lower-rank than weights, so re-truncation after the correction step incurs only negligible error.</figcaption>
+      <figcaption><span class="figlabel">Figure 3</span>Effective-rank ratio $k_{0.95}(G)/k_{0.95}(W')$ — gradient over weight — for every linear projection type across early (layers.0), middle (layers.15), and late (layers.31) layers of LLaMA-7B. With the exception of a few middle-layer cells, ratios stay well below 0.4: gradients are consistently much lower-rank than weights, so re-truncation after the correction step incurs only negligible error.</figcaption>
     </figure>
 
     <p style="margin-top: 32px;">In practice this rank-bound argument shows up as a controlled descent in actual loss. Iterating the truncate–correct–re-truncate cycle on LLaMA-7B at 60% pruning produces a decaying zigzag — each truncation introduces a small upward bump, each correction drops the loss further, and the trajectory keeps trending down because the corrections stay close to the rank-$k$ manifold.</p>
@@ -1062,7 +1208,7 @@
   </section>
 
   <!-- ─────────────────────────────── RESULTS ─────────────────────────────── -->
-  <section id="results">
+  <section id="results" class="reveal from-left">
     <div class="section-label">Results</div>
     <h2>Consistent gains across <em>models, scales, and ratios</em>.</h2>
 
@@ -1115,7 +1261,7 @@
   </section>
 
   <!-- ─────────────────────────────── BIBTEX ─────────────────────────────── -->
-  <section id="bibtex">
+  <section id="bibtex" class="reveal from-right">
     <div class="section-label">Cite</div>
     <h2>BibTeX</h2>
     <p style="color: var(--muted); max-width: 60ch;">If you find this work useful, please consider citing it. The arXiv ID will be updated when posted.</p>
@@ -1150,6 +1296,37 @@
 </main>
 
 <script>
+  // scroll reveal — alternating slide
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // convergence chart — draw line + stagger markers on scroll into view
+  const conv = document.querySelector('.convergence');
+  if (conv) {
+    // assign per-marker delays based on x position so each dot/label appears
+    // just as the drawing polyline reaches it
+    const markers = [...conv.querySelectorAll('svg circle, svg text[fill="#7e3415"]')];
+    markers.forEach(m => {
+      const x = m.tagName.toLowerCase() === 'circle'
+        ? +m.getAttribute('cx')
+        : +m.getAttribute('x');
+      const p = Math.max(0, Math.min(1, (x - 80) / (660 - 80)));
+      m.style.transitionDelay = `${0.1 + p * 2.3}s`;
+    });
+
+    const convObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          conv.classList.add('draw');
+          convObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    convObserver.observe(conv);
+  }
+
   // copy bibtex
   const btn = document.getElementById('copy-bib');
   if (btn) {
