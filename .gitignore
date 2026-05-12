@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# design prototypes (kept locally for reference, not part of the live site)
+abstract-prototypes.html
+badge-prototypes.html
+contributions-prototypes.html
+hero-prototypes.html
+logo-hover-prototypes.html
+title-prototypes.html
+scroll-index.html
+scroll-*.html
+
+# LinkedIn announcement animation source + Remotion render project
+hero-animation.html
+remotion-hero/
